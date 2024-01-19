@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صفحه ورود</title>
+    <style>
+        @font-face {
+            font-family: 'B-Nazanin';
+            src: url(/usr/local/web_panel/b-nazanin.ttf) format('ttf');
+        }
+
+        body {
+            font-family: 'B-Nazanin', sans-serif;
+            /* Use the 'B Nazanin' font for the entire body */
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            background-color: #778D45;
+            /* Light olive background */
+            color: #1A2902;
+            /* Dark greenish-brown text color */
+            text-align: center;
+            padding-top: 100px;
+            margin: 0;
+        }
+
+        form {
+            max-width: 350px;
+            margin: 0 auto;
+            background: rgba(174, 192, 144, 0.8);
+            /* Transparent background with glass effect */
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #1A2902;
+            /* Dark greenish-brown label color */
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #F7C815;
+            /* Amber button color */
+            color: #1A2902;
+            /* Dark greenish-brown text color */
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Add CSS styling for positioning forms */
+        .form-container {
+            display: flex;
+            flex-wrap: wrap;
+            /* Allow forms to wrap to the next line on smaller screens */
+            justify-content: center;
+            /* Center forms horizontally */
+        }
+
+        form {
+            flex: 1;
+            margin-right: 20px;
+            margin-bottom: 20px;
+            /* Add space between forms */
+        }
+
+        form input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        form textarea {
+            height: 100px;
+            width: 100%;
+            resize: vertical;
+            padding: 8px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .form-container {
+                flex-direction: column;
+                /* Change to a column layout on small screens */
+            }
+
+            body {
+                padding-top: 10px;
+            }
+
+            form {
+                margin-right: 0;
+                /* Remove right margin to stack forms */
+                margin-bottom: 20px;
+                /* Add some space between forms */
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Container for forms -->
+    <div class="form-container">
+        <form id="login-form-1" method="post" action="/login">
+            <h2>ورود با استفاده از نام کاربری و کلمه عبور</h2>
+            <label for="username-1">نام کاربری:</label>
+            <input type="text" id="username-1" name="username-1" required>
+            <br>
+            <label for="password-1">رمز عبور:</label>
+            <input type="password" id="password-1" name="password-1" required>
+            <label for="math-problem-1">حاصل عبارت ریاضی زیر را محاسبه کنید:</label>
+            <input type="text" id="math-problem-1" name="math-problem-1" value="{{.MathProblem}}" disabled dir="ltr" />
+            <input type="text" id="math-answer-1" name="math-answer-1" placeholder="جواب خود را اینجا وارد کنید!" />
+            <input type="hidden" id="math-problem" name="math-problem" value="{{.MathProblem}}" />
+            <input type="text" id="email" name="email" style="display: none;">
+            <br>
+            <button type="submit">ورود</button>
+        </form>
+        <!-- Form for the second login method -->
+        <form id="login-form-2" method="post" action="/login">
+            <h2>ورود با استفاده از کانفیگ</h2>
+            <label for="combined-login">آخرین کانفیگ خود را در کادر زیر پیست کنید:</label>
+            <textarea type="text" id="combined-login" name="combined-login"
+                placeholder="کانفیگ خود را از نرم افزار کپی کرده و در اینجا وارد کنید." dir="ltr"></textarea>
+            <br>
+            <label for="math-problem-2">حاصل عبارت ریاضی زیر را محاسبه کنید:</label>
+            <input type="text" id="math-problem-2" name="math-problem-2" value="{{.MathProblem}}" disabled dir="ltr" />
+            <input type="text" id="math-answer-2" name="math-answer-2" placeholder="جواب خود را اینجا وارد کنید!" />
+            <!-- You can add additional fields for the second login method if needed -->
+            <button type="button" onclick="extractUsernameAndPassword()">ورود</button>
+        </form>
+    </div>
+    <script>
+        function extractUsernameAndPassword() {
+            // Get the input and text area elements
+            var usernameInput = document.getElementById("username-1");
+            var passwordInput = document.getElementById("password-1");
+            var math1Input = document.getElementById("math-answer-1");
+            var math2Input = document.getElementById("math-answer-2");
+
+            var textArea = document.getElementById("combined-login");
+
+            // Extract username and password from the text
+            var text = textArea.value;
+            var usernameMatch = text.match(/#(.+)$/); // Match everything after '#' as the username
+            var passwordMatch = text.match(/\/\/(.+?)@/); // Match everything between '//' and '@' as the password
+
+            // Fill the inputs with the extracted values
+            if (usernameMatch && passwordMatch) {
+                usernameInput.value = usernameMatch[1];
+                passwordInput.value = passwordMatch[1];
+		math1Input.value = math2Input.value
+                // Submit the form using JavaScript
+                document.getElementById("login-form-1").submit();
+            } else {
+                // Handle the case when extraction fails
+                alert("Failed to extract username and password from the text.");
+            }
+        }
+    </script>
+</body>
+
+</html>
+

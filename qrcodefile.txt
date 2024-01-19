@@ -1,0 +1,1 @@
+trojan://{password}@www.server.com:443?security=tls&sni=subdomain.example.com&alpn=h2,http/1.1&allowInsecure=1&fp=chrome&type=ws&path=/plans/freeplan&host=subdomain.example.com#{username}
