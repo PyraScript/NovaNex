@@ -14,15 +14,11 @@ install_web_panel() {
     # Create a directory for the web panel
     sudo mkdir -p /usr/local/web_panel
 
-    # Check if Go is installed
-    if ! command -v go &> /dev/null; then
-        echo -e "${CYAN}Installing Go...${NC}"
-        # Download and install Go (adjust the version as needed)
-        sudo wget https://golang.org/dl/go1.17.6.linux-amd64.tar.gz
-        sudo tar -C /usr/local -xzf go1.17.6.linux-amd64.tar.gz
-        echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
-        source ~/.bashrc
-    fi
+    # Update package lists
+    sudo apt-get update
+
+    # Install Go using apt-get
+    sudo apt-get install -y golang
 
     # Clone the repository (replace with your repository URL)
     sudo git clone https://github.com/PyraScript/NovaNex.git /usr/local/web_panel
