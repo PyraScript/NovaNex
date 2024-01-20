@@ -37,6 +37,6 @@ Love NovaNex and want to contribute? We'd be thrilled! Check out our [contributi
 NovaNex is licensed under the [MIT License][(.license)](https://github.com/PyraScript/NovaNex/blob/main/.License).
 
 ## Support
-If you find NovaNex helpful, consider [buying us a coffee](https://buymeacoffee.com/yourusername) to support ongoing development.
+If you find NovaNex helpful, consider [buying us a coffee] 0xD8561114A6C20e18931d4d00102642B7a85Ff74e to support ongoing development.
 
 Enjoy managing your client services with NovaNex!
