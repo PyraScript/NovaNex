@@ -28,12 +28,13 @@ install_web_panel() {
 
     # Initialize a new Go module
     go mod init web_panel
+    go mod tidy
     
     # Download dependencies using go get
     go get -d ./...
 
     # Build the Go program
-    go build -o web_panel ./cmd/  # Assuming your main package is in the cmd directory
+    go build -o web_panel . 
 
     # Create a systemd service file
     sudo tee /etc/systemd/system/web_panel.service > /dev/null <<EOL
