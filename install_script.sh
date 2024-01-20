@@ -25,7 +25,10 @@ install_web_panel() {
 
     # Change to the web panel directory
     cd /usr/local/web_panel
-    go mod init
+
+    # Initialize a new Go module
+    go mod init web_panel
+    
     # Download dependencies using go get
     go get -d ./...
 
