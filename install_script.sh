@@ -18,14 +18,14 @@ install_web_panel() {
     sudo apt-get update
 
     # Install Go using apt-get
-    sudo apt-get install -y golang
+    sudo apt-get install -y golang gccgo
 
     # Clone the repository (replace with your repository URL)
     sudo git clone https://github.com/PyraScript/NovaNex.git /usr/local/web_panel
 
     # Change to the web panel directory
     cd /usr/local/web_panel
-
+    go mod init
     # Download dependencies using go get
     go get -d ./...
 
