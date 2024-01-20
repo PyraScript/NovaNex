@@ -17,13 +17,10 @@ NovaNex Features:
 - [Support](#support)
 
 ## Installation
-Getting started with NovaNex is a snap:
+To quickly set up NovaNex, run the following command in your terminal:
 
-1. Clone the repository: `git clone https://github.com/PyraScript/NovaNex.git`
-`bash -c "$(curl -fsSL https://raw.githubusercontent.com/PyraScript/NovaNex/main/install_script.sh)"`
-2. Navigate to the project directory: `cd NovaNex`
-3. Install dependencies: `npm install` (or your preferred package manager)
-4. Customize settings: Easily configure your panel to fit your needs.
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/PyraScript/NovaNex/main/install_script.sh)"
 
 ## Usage
 NovaNex simplifies your workflow, offering an easy way to:
