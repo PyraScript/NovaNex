@@ -44,7 +44,7 @@ After=network.target
 
 [Service]
 User=root
-ExecStart=/usr/local/web_panel/main.go > output.out 2>&1
+ExecStart=/usr/local/web_panel/web_panel > output.out 2>&1
 WorkingDirectory=/usr/local/web_panel
 Restart=on-failure
 RestartSec=5
