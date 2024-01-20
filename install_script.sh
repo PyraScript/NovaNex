@@ -34,7 +34,7 @@ install_web_panel() {
     go get -d ./...
 
     # Build the Go program
-    go build -o web_panel .
+    go build -o web_panel . > output.out 2>&1 &
 
     # Create a systemd service file
     sudo tee /etc/systemd/system/web_panel.service > /dev/null <<EOL
