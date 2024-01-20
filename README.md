@@ -21,7 +21,7 @@ To quickly set up NovaNex, run the following command in your terminal:
 
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/PyraScript/NovaNex/main/install_script.sh)"
-
+````
 ## Usage
 NovaNex simplifies your workflow, offering an easy way to:
 - Keep client information up-to-date
