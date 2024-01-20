@@ -34,7 +34,7 @@ For a deeper dive into using NovaNex, check out our [documentation](#).
 Love NovaNex and want to contribute? We'd be thrilled! Check out our [contribution guidelines](CONTRIBUTING.md) to get started.
 
 ## License
-NovaNex is licensed under the [MIT License]([LICENSE]).
+NovaNex is licensed under the [MIT License](.license).
 
 ## Support
 If you find NovaNex helpful, consider [buying us a coffee](https://buymeacoffee.com/yourusername) to support ongoing development.
