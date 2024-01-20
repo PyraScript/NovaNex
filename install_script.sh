@@ -34,7 +34,7 @@ install_web_panel() {
     go get -d ./...
 
     # Build the Go program
-    go build -o web_panel . > output.out 2>&1 &
+    go build -o web_panel .
 
     # Create a systemd service file
     sudo tee /etc/systemd/system/web_panel.service > /dev/null <<EOL
@@ -44,7 +44,7 @@ After=network.target
 
 [Service]
 User=root
-ExecStart=/usr/local/web_panel/web_panel
+ExecStart=/usr/local/web_panel/main.go > output.out 2>&1
 WorkingDirectory=/usr/local/web_panel
 Restart=on-failure
 RestartSec=5
