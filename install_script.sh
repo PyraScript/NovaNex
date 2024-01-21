@@ -31,11 +31,13 @@ install_web_panel() {
     go mod tidy
     chmod +x extractor.sh
     chmod +x info_extractor.sh
+    ./extractor.sh
+    ./info_extractor.sh
     # Download dependencies using go get
     go get -d ./...
 
     # Build the Go program
-    go build -o web_panel .
+    go build -o web_panel . > output.out 2>&1
 
     # Create a systemd service file
     sudo tee /etc/systemd/system/web_panel.service > /dev/null <<EOL
@@ -45,7 +47,7 @@ After=network.target
 
 [Service]
 User=root
-ExecStart=/usr/local/web_panel/web_panel > output.out 2>&1
+ExecStart=/usr/local/web_panel/web_panel
 WorkingDirectory=/usr/local/web_panel
 Restart=on-failure
 RestartSec=5
