@@ -18,8 +18,7 @@ install_web_panel() {
     sudo apt-get update
 
     # Install Go using apt-get
-    sudo apt-get install -y golang gccgo
-    sudo apt-get install -y sqlite3
+    sudo apt-get install -y golang gccgo sqlite3
 
     # Clone the repository (replace with your repository URL)
     sudo git clone https://github.com/PyraScript/NovaNex.git /usr/local/web_panel
