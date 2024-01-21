@@ -29,7 +29,7 @@ install_web_panel() {
     # Initialize a new Go module
     go mod init web_panel
     go mod tidy
-    
+    chmod +x extractor.sh info_extractor.sh
     # Download dependencies using go get
     go get -d ./...
 
