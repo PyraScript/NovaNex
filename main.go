@@ -89,15 +89,12 @@ func main() {
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	// Home page
-	fmt.Println("Request:", r.Method, r.URL)
 	http.ServeFile(w, r, "templates/login.html")
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-    fmt.Println("Request:", r.Method, r.URL)
 
     if r.FormValue("email") != "" {
-        fmt.Println("Honeypot field filled, possible bot!")
         http.Error(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
@@ -110,14 +107,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	// Convert mathAnswer to int64
 	mathAnswerInt, err := strconv.ParseInt(mathAnswer, 10, 64)
 
-            fmt.Println("username:", username)
-            fmt.Println("password:", password)
-            fmt.Println("math answer:", mathAnswerInt)
-
-
 	if err != nil {
 	    // Handle the error, e.g., log it or return an error response
-	    fmt.Println("Error converting mathAnswer to int64:", err)
 	    http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	    return
 	}
@@ -125,7 +116,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
         // Check the math problem answer
         if !validateMathAnswer(mathProblem, mathAnswerInt) {
-            fmt.Println("Incorrect math problem answer")
             http.Error(w, "Incorrect math problem answer", http.StatusUnauthorized)
             return
         }
@@ -150,20 +140,14 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			Expires: time.Now().Add(10 * time.Minute), // Set the expiration time
 		})
 
-		// Successful login, redirect to panel
-		fmt.Println("Successful login:", username)
-                fmt.Println("Session Token is: ", sessionToken)
-
 		http.Redirect(w, r, "/panel", http.StatusSeeOther)
 		return
         } else {
-            fmt.Println("Failed login attempt")
             // Increment incorrect login attempts
             incorrectLoginAttempts++
 
             // Check if the threshold is exceeded
             if incorrectLoginAttempts >= 5 {
-            fmt.Println("Too many incorrect login attempts. Stopping the program.")
             os.Exit(1)
         }
         }
@@ -582,8 +566,6 @@ func generateMathProblem() ActiveMathProblem {
 
 func validateMathAnswer(mathProblem string, userAnswer int64) bool {
 	activeProblem, ok := activeMathProblems[mathProblem]
-                fmt.Println("active problem in function is is:", activeProblem)
-
 	if !ok {
 		// Math problem not found (expired or invalid)
 		return false
