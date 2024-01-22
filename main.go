@@ -15,6 +15,7 @@ import (
 	"crypto/rand"
 	"github.com/dgrijalva/jwt-go"
 	"math/big"
+	"bufio"
 
 )
 
@@ -421,6 +422,18 @@ func readQRCodeData(filename, username string) (string, error) {
 	data = strings.ReplaceAll(data, "{password}", password)
 	data = strings.ReplaceAll(data, "{protocol}", protocol)
 
+	// Check if {user-agent} is present in data
+	if strings.Contains(data, "{user-agent}") {
+		// Replace {user-agent} with a random line from user-agent.txt
+		userAgent, err := getRandomUserAgent("user-agent.txt")
+		if err != nil {
+			logger.Println("Error getting random user agent:", err)
+			// You may choose to handle the error in a way that fits your application
+		} else {
+			data = strings.ReplaceAll(data, "{user-agent}", userAgent)
+		}
+	}
+
 	return data, nil
 }
 
@@ -428,6 +441,66 @@ func readQRCodeData(filename, username string) (string, error) {
 func isValidUUID(s string) bool {
 	_, err := uuid.Parse(s)
 	return err == nil
+}
+
+// Function to get a random line from a file
+func getRandomUserAgent(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	// Count the number of lines in the file
+	lineCount, err := countLines(file)
+	if err != nil {
+		return "", err
+	}
+
+	// Generate a random number within the range [1, lineCount]
+	randNum, err := rand.Int(rand.Reader, big.NewInt(int64(lineCount)))
+	if err != nil {
+	    return "", err
+	}
+	randomLineNumber := int(randNum.Int64()) + 1
+
+	// Rewind the file to the beginning
+	file.Seek(0, 0)
+
+	// Read the file until the random line is reached
+	scanner := bufio.NewScanner(file)
+	currentLineNumber := 0
+	var userAgent string
+
+	for scanner.Scan() {
+		currentLineNumber++
+		if currentLineNumber == randomLineNumber {
+			userAgent = scanner.Text()
+			break
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return "", err
+	}
+
+	return userAgent, nil
+}
+
+// Function to count lines in a file
+func countLines(file *os.File) (int, error) {
+	scanner := bufio.NewScanner(file)
+	lineCount := 0
+
+	for scanner.Scan() {
+		lineCount++
+	}
+
+	if err := scanner.Err(); err != nil {
+		return 0, err
+	}
+
+	return lineCount, nil
 }
 
 
