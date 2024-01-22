@@ -405,14 +405,31 @@ func readQRCodeData(filename, username string) (string, error) {
 	// Find the user password from temp_up.txt
 	password, err := findUserPassword(username)
 	if err != nil {
-	    log.Println("Error finding user password:", err)
-	    return "DefaultPassword", err
+		logger.Println("Error finding user password:", err)
+		return "DefaultPassword", err
+	}
+
+	// Check if the password looks like a UUID
+	isUUID := isValidUUID(password)
+
+	// Set the protocol based on the password format
+	protocol := "trojan"
+	if isUUID {
+		protocol = "vless"
 	}
 
 	data = strings.ReplaceAll(data, "{password}", password)
+	data = strings.ReplaceAll(data, "{protocol}", protocol)
 
 	return data, nil
 }
+
+// Function to check if a string is a valid UUID
+func isValidUUID(s string) bool {
+	_, err := uuid.Parse(s)
+	return err == nil
+}
+
 
 // Function to find user password from temp_up.txt
 func findUserPassword(username string) (string, error) {
