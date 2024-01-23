@@ -122,6 +122,7 @@
         <div class="sidebar">
             <a href="#" class="menu" onclick="showContent('ViewConfig')">مشاهده وضعیت کانفیگ</a>
             <a href="#" class="menu" onclick="showContent('NewConfig')">دریافت کانفیگ جدید</a>
+            <a href="#" class="menu" onclick="showContent('NewConfigguide')">راهنمای وارد کردن کانفیگ جدید</a>
             <a href="#" class="menu" onclick="showContent('Logout')">خروج</a>
         </div>
         <div class="content" id="main-content">
@@ -192,6 +193,9 @@
 	        content.appendChild(copyButton);
 	        // Append the div to the content
  	       content.appendChild(disabledTextboxContainer);
+           } else if (menu === "NewConfigguide") {
+                content.innerHTML ="<h1>راهنمای اضافه کردن کانفیگ جدید</h1>";
+
 		   
            } else if (menu === "Logout") {
             	window.location.href = "/logout";
