@@ -142,8 +142,6 @@
         var currentDate = new Date();
 	var remainingTimeMillis = E_date - currentDate.getTime();
 	var days = Math.floor(remainingTimeMillis / (1000 * 60 * 60 * 24));
-	var hours = Math.floor((remainingTimeMillis % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-	var minutes = Math.floor((remainingTimeMillis % (1000 * 60 * 60)) / (1000 * 60));
                 content.innerHTML = `
 			<h1>مشاهده وضعیت کانفیگ</h1>
 		        <div class="chart-container">
@@ -158,9 +156,9 @@
                             </div>
 		        </div>`;
 
-	var remainingDaysDiv = document.getElementById("remainingDays");
-	remainingDaysDiv.innerHTML = "مدت زمان باقی مانده از اشتراک شما<br><span style='display: inline-block; margin-top: 65px;font-size: 32px; color: #6A7B73;'>" +
-							    days + " روز " + hours + ":" + minutes + "</span>";
+        var remainingDaysDiv = document.getElementById("remainingDays");
+        remainingDaysDiv.innerHTML = "مدت زمان باقی مانده از اشتراک شما: " + "<br>" + days + " روز " +"<br>"+ "<br>تاریخ انقضاء اشتراک شما:<br>" + new Date(E_date).toLocaleString("fa-IR");
+
         content.innerHTML += "<div id='storageChart' style='max-width: 600px; margin: auto; margin-top: 20px;'><canvas id='storageCanvas'></canvas></>"
         content.innerHTML += "<div id='trafficChart' style='max-width: 600px; margin: auto; margin-top: 20px;'><canvas id='trafficCanvas'></canvas></>"
 
