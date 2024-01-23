@@ -16,6 +16,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"math/big"
 	"bufio"
+        "github.com/google/uuid"
 
 )
 
@@ -59,6 +60,21 @@ var (
 )
 
 var incorrectLoginAttempts int
+
+var (
+    logger *log.Logger
+)
+
+func init() {
+    // Open the log file for writing. Append to the file if it exists.
+    file, err := os.OpenFile("app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Set up the logger to write to the file
+    logger = log.New(file, "APP: ", log.Ldate|log.Ltime|log.Lshortfile)
+}
 
 func main() {
 
