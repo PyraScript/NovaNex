@@ -162,41 +162,31 @@
         createtrafficChart();
            } else if (menu === "NewConfig") {
                 content.innerHTML = "<h1>دریافت کانفیگ جدید</h1><p>در صورتی که کانفیگ قبلی شما با مشکل مواجه شده است از این بحش کانفیگ جدید را دریافت کنید.</p><p>با استفاده از دکمه پایین کانفیگ را کپی کنید.</p>";
-    // Create a div to simulate a disabled textbox with a size of 256x256
-    var disabledTextboxContainer = document.createElement("div");
-    //disabledTextboxContainer.style.width = "256px";
-    //disabledTextboxContainer.style.height = "256px";
-    disabledTextboxContainer.style.border = "1px solid #ccc"; // Optional: Add a border for visual clarity
-    disabledTextboxContainer.style.display = "flex";
-    disabledTextboxContainer.style.justifyContent = "center";
-    disabledTextboxContainer.style.alignItems = "left";
-
-    // Create a paragraph inside the div to display the QR code data
-    var qrCodeDataParagraph = document.createElement("p");
-    qrCodeDataParagraph.textContent = "{{.QRCodeData}}";
-    qrCodeDataParagraph.style.textAlign = "left";
-
-    // Set the font size of the text
-    qrCodeDataParagraph.style.fontSize = "10px";
-
-    // Append the paragraph to the div
-    disabledTextboxContainer.appendChild(qrCodeDataParagraph);
-
-    // Create a button for copying to clipboard
-    var copyButton = document.createElement("button");
-    copyButton.textContent = "کپی کردن";
-    copyButton.addEventListener("click", function () {
-        copyToClipboard(qrCodeDataParagraph.textContent);
-    });
-
-    // Append the button to the content
-    content.appendChild(copyButton);
-
-    // Append the div to the content
-    content.appendChild(disabledTextboxContainer);
-
-
-
+	        // Create a div to simulate a disabled textbox with a size of 256x256
+	        var disabledTextboxContainer = document.createElement("div");
+	        disabledTextboxContainer.style.border = "1px solid #ccc"; // Optional: Add a border for visual clarity
+	        disabledTextboxContainer.style.display = "flex";
+	        disabledTextboxContainer.style.justifyContent = "center";
+	        disabledTextboxContainer.style.alignItems = "left";
+	        // Create a paragraph inside the div to display the QR code data
+	        var qrCodeDataParagraph = document.createElement("p");
+	        qrCodeDataParagraph.textContent = "{{.QRCodeData}}";
+	        qrCodeDataParagraph.style.textAlign = "left";
+	        // Set the font size of the text
+	        qrCodeDataParagraph.style.fontSize = "10px";
+ 	       // Append the paragraph to the div
+ 	       disabledTextboxContainer.appendChild(qrCodeDataParagraph);
+	        // Create a button for copying to clipboard
+ 	       var copyButton = document.createElement("button");
+ 	       copyButton.textContent = "کپی کردن";
+ 	       copyButton.addEventListener("click", function () {
+ 	           copyToClipboard(qrCodeDataParagraph.textContent);
+ 	       });
+	        // Append the button to the content
+	        content.appendChild(copyButton);
+	        // Append the div to the content
+ 	       content.appendChild(disabledTextboxContainer);
+		   
            } else if (menu === "Logout") {
             	window.location.href = "/logout";
             }
