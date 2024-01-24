@@ -157,7 +157,21 @@
 		        </div>`;
 
         var remainingDaysDiv = document.getElementById("remainingDays");
-        remainingDaysDiv.innerHTML = "مدت زمان باقی مانده از اشتراک شما: " + "<br>" + days + " روز " +"<br>"+ "<br>تاریخ انقضاء اشتراک شما:<br>" + new Date(E_date).toLocaleString("fa-IR");
+
+// Check if the expiration time has passed
+if (remainingTimeMillis < 0) {
+    remainingDaysDiv.innerHTML = "اشتراک شما به پایان رسیده" + "<br>"+"<br>" + " تاریخ انقضای اشتراک شما: " + "<br>" + new Date(E_date).toLocaleString("fa-IR");
+} else {
+    // Format the remaining days text
+    var remainingDaysText = "مدت زمان باقی مانده از اشتراک شما: " + "<br>" + days + " روز";
+
+    // Format the expiration date text
+    var expirationDateText = "تاریخ انقضای اشتراک: " + "<br>" + new Date(E_date).toLocaleString("fa-IR");
+
+    // Combine both lines with a line break
+    remainingDaysDiv.innerHTML = remainingDaysText + "<br>" + expirationDateText;
+}
+
 
         content.innerHTML += "<div id='storageChart' style='max-width: 600px; margin: auto; margin-top: 20px;'><canvas id='storageCanvas'></canvas></>"
         content.innerHTML += "<div id='trafficChart' style='max-width: 600px; margin: auto; margin-top: 20px;'><canvas id='trafficCanvas'></canvas></>"
