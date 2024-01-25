@@ -10,7 +10,8 @@ NC='\033[0m' # No Color
 
 hashPassword() {
     # Use mkpasswd to hash the password with bcrypt
-    mkpasswd -m bcrypt -s 10 "$1"
+    hashedPassword=mkpasswd -m bcrypt -s 10 "$1"
+    echo "$hashedPassword"
 }
 
 install_web_panel() {
