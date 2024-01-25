@@ -49,7 +49,7 @@ EOF
 
     # Store random username and hashed password in the database
     sqlite3 NovaNex.db <<EOF
-    INSERT INTO admins (username, password) VALUES ('$randomUsername', '$hashedPassword');
+    INSERT INTO admins (username, password) VALUES ('$randomUsername', '$randomPassword');
 EOF
 
     # Display generated username and password to the administrator
