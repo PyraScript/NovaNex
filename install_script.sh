@@ -8,12 +8,6 @@ BLUE='\033[1;34m'
 CYAN='\033[1;36m'
 NC='\033[0m' # No Color
 
-hashPassword() {
-    # Use mkpasswd to hash the password with bcrypt
-    hashedPassword=$(echo -n "$1" | bcrypt -s 10 | awk '{print $1}')
-    echo "$hashedPassword"
-}
-
 install_web_panel() {
     echo -e "${BLUE}Installing Go and web panel...${NC}"
 
@@ -52,8 +46,7 @@ EOF
 # Generate random username and password
 randomUsername="admin@$(openssl rand -hex 4)"
 randomPassword=$(openssl rand -hex 8)
-# Use the hashPassword function to hash the password
-hashedPassword=$(hashPassword "$randomPassword")
+hashedPassword= mkpasswd -m bcrypt -s 10 "$1"
 
 # Store random username and hashed password in the database
 sqlite3 NovaNex.db <<EOF
