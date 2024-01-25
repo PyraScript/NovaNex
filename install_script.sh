@@ -10,7 +10,7 @@ NC='\033[0m' # No Color
 
 hashPassword() {
     # Use mkpasswd to hash the password with bcrypt
-    hashedPassword=mkpasswd -m bcrypt -s 10 "$1"
+    hashedPassword=$(echo -n "$1" | bcrypt -s 10 | awk '{print $1}')
     echo "$hashedPassword"
 }
 
