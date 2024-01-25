@@ -42,7 +42,6 @@ install_web_panel() {
     # Initialize the SQLite database with the admins table
     sqlite3 NovaNex.db <<EOF
     CREATE TABLE IF NOT EXISTS admins (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL,
         password TEXT NOT NULL
     );
