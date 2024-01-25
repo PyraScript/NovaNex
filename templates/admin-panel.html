@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400..700&family=Noto+Nastaliq+Urdu:wght@400..700&display=swap" rel="stylesheet">
+    <title>صفحه کاربری مدیر</title>
+    <style>
+        body {
+            background: #F9F9F9; /* Light gray background */
+            color: #333; /* Dark gray text color */
+            font-family: "Noto Naskh Arabic", Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 50px;
+            margin: 0;
+        }
+        .top-bar {
+            background: #ECF0F1; /* Dodger blue top bar color */
+            padding: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px; /* Rounded corners */
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 20px; /* Add spacing between the sidebar and main content */
+        }
+        .sidebar {
+            background: #ECF0F1; /* Light silver sidebar color */
+            color: #333; /* Dark gray text color for sidebar */
+            padding: 20px;
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 10px; /* Rounded corners */
+            margin-bottom: 20px; /* Add some spacing from the main content */
+        }
+        .menu {
+            margin-bottom: 15px;
+            cursor: pointer;
+            color: #333; /* Dark gray text color for menu items */
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 18px;
+            border-radius: 5px; /* Rounded corners for menu items */
+            padding: 10px; /* Add padding for a better look */
+            display: block; /* Make the menus block elements */
+            transition: background 0.3s ease; /* Smooth transition on hover */
+        }
+        .menu:hover {
+            background: #D5DBDB; /* Lighter silver background on hover */
+        }
+        .content {
+            background: #FFFFFF; /* White main content background */
+            padding: 20px;
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 10px; /* Rounded corners */
+        }
+        p {
+            font-size: 18px;
+            margin-bottom: 20px;
+            line-height: 1.5; /* Improved line height for better readability */
+        }
+        h1 {
+            margin-bottom: 40px;
+            color: #333; /* Dark gray heading color */
+        }
+
+        @media only screen and (min-width: 600px) {
+            /* Adjustments for larger screens */
+            .container {
+                flex-direction: row;
+            }
+            .sidebar {
+                width: 20%;
+                margin-bottom: 0;
+            }
+            .content {
+                width: 80%;
+            }
+
+        }
+        .chart-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+
+        .chart {
+            max-width: 200px;
+            margin: 20px;
+	    position: relative;
+        }
+        .overview-num {
+    	    position: absolute;
+    	    left: 50%;
+    	    top: 60%;
+    	    transform: translate(-50%, -50%);
+    	    font-size: 1.5em; /* Adjust the font size as needed */
+	}
+        h1, p, .menu {
+	        font-family: "Noto Naskh Arabic", Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        به صفحه کاربری خوش آمدید!
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <a href="#System" class="menu" onclick="showContent('System')">سیستم</a>
+            <a href="#NewConfig" class="menu" onclick="showContent('NewConfig')">وارد کردن کانفیگ جدید</a>
+            <a href="#UploadFile" class="menu" onclick="showContent('UploadFile')">آپلود فایل راهنما</a>
+            <a href="#Setting" class="menu" onclick="showContent('Setting')">تنظیمات پنل مدیر</a>
+            <a href="#Logout" class="menu" onclick="showContent('Logout')">خروج</a>
+        </div>
+        <div class="content" id="main-content">
+            <h1>صفحه کاربری</h1>
+            <p>خوش آمدید به صفحه کاربری، {{.Username}}!</p>
+        </div>
+    </div>
+    <script>
+    // Assign Go variables to JavaScript variables
+    var cpuUsage = {{.CpuUsage}};
+    var ramUsage = {{.RamUsage}};
+    var swapUsage = {{.SwapUsage}};
+    var diskUsage = {{.DiskUsage}};
+        function showContent(menu) {
+            var content = document.getElementById("main-content");
+            content.innerHTML = "";
+            if (menu === "System") {
+                    content.innerHTML = `
+			<h1>عملکرد سیستم</h1>
+		        <div class="chart-container">
+		            <div class="chart" id="CPUChart">
+				<span class="overview-num">${cpuUsage}%</span>
+		                <canvas id="CPUCanvas"></canvas>
+		            </div>
+		            <div class="chart" id="RamChart">
+		                <span class="overview-num">${ramUsage}%</span>
+		                <canvas id="RamCanvas"></canvas>
+		            </div>
+		            <div class="chart" id="SwapChart">
+		                <span class="overview-num">${swapUsage}%</span>
+		                <canvas id="SwapCanvas"></canvas>
+		            </div>
+		            <div class="chart" id="DiskChart">
+		                <span class="overview-num">${diskUsage}%</span>
+		                <canvas id="DiskCanvas"></canvas>
+		            </div>
+			</div>`;
+        content.innerHTML += "<div id='CPUChart' style='max-width: 600px; margin: auto; margin-top: 20px;'><canvas id='CPUCanvas'></canvas></>"
+        content.innerHTML += "<div id='RamChart' style='max-width: 600px; margin: auto; margin-top: 20px;'><canvas id='RamCanvas'></canvas></>"
+        content.innerHTML += "<div id='SwapChart' style='max-width: 600px; margin: auto; margin-top: 20px;'><canvas id='SwapCanvas'></canvas></>"
+        content.innerHTML += "<div id='DiskChart' style='max-width: 600px; margin: auto; margin-top: 20px;'><canvas id='DiskCanvas'></canvas></>"
+                // Create and update the charts
+        createCPUChart();
+        createRamChart();
+        createSwapChart();
+        createDiskChart();
+           } else if (menu === "NewConfig") {
+    content.innerHTML = `
+        <h1>بارگذاری کانفیگ جدید کاربران</h1>
+        <form id="configForm" onsubmit="sendConfig(); return false;">
+            <div class="form-group">
+                <label for="configTextarea">متن کانفیگ:</label>
+                <textarea id="configTextarea" class="inputField" rows="5" required></textarea>
+            </div>
+
+            <button type="submit" class="submitButton">ارسال کانفیگ</button>
+        </form>`;
+
+    // Add the following CSS style for the enhanced form appearance
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .inputField {
+            width: 98%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: vertical;
+        }
+        .submitButton {
+            background-color: #3498DB;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .submitButton:hover {
+            background-color: #217dbb;
+        }
+    `;
+    document.head.appendChild(style);
+           } else if (menu === "UploadFile") {
+    content.innerHTML = `
+        <h1>آپلود فایل در سرور</h1>
+        <p>لطفا از این قسمت فایل راهنمای خود را با فرمت pdf در سرور آپلود نمایید.</p>
+        <p>همچنین از این قسمت برای آپلود هرگونه فایل بر روی سرور می توانید استفاده نمایید.</p>
+        <form id="uploadForm" enctype="multipart/form-data" onsubmit="uploadFile(); return false;">
+            <div class="form-group">
+                <label for="fileInput">انتخاب فایل:</label>
+                <input type="file" id="fileInput" class="inputField" accept=".pdf, .doc, .docx" required>
+            </div>
+
+            <button type="submit" class="submitButton">آپلود فایل</button>
+        </form>`;
+    
+    // Add the following CSS style for the enhanced form appearance
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .inputField {
+            width: 98%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .submitButton {
+            background-color: #3498DB;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: "Noto Naskh Arabic", Arial, sans-serif;
+        }
+        .submitButton:hover {
+            background-color: #217dbb;
+        }
+    `;
+    document.head.appendChild(style);
+                
+           } else if (menu === "Setting") {
+    content.innerHTML = `
+        <h1>تنظیمات حساب کاربری مدیر</h1>
+        <form id="settingsForm" onsubmit="updateSettings(); return false;">
+            <div class="form-group">
+                <label for="oldUsername">نام کاربری قبلی:</label>
+                <input type="text" id="oldUsername" class="inputField" required>
+            </div>
+
+            <div class="form-group">
+                <label for="newUsername">نام کاربری جدید:</label>
+                <input type="text" id="newUsername" class="inputField" required>
+            </div>
+
+            <hr class="separator"> <!-- Separator between username and password -->
+
+            <div class="form-group">
+                <label for="oldPassword">رمز عبور قبلی:</label>
+                <input type="password" id="oldPassword" class="inputField" required>
+            </div>
+
+            <div class="form-group">
+                <label for="newPassword">رمز عبور جدید:</label>
+                <input type="password" id="newPassword" class="inputField" required>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">تکرار رمز عبور جدید:</label>
+                <input type="password" id="confirmPassword" class="inputField" required>
+            </div>
+
+            <button type="submit" class="submitButton">ذخیره تغییرات</button>
+        </form>`;
+
+    // Add the following CSS style for the enhanced form appearance
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .inputField {
+            width: 98%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .separator {
+            border-top: 1px solid #ddd;
+            margin: 20px 0;
+        }
+        .submitButton {
+            background-color: #3498DB;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: "Noto Naskh Arabic", Arial, sans-serif;
+        }
+        .submitButton:hover {
+            background-color: #217dbb;
+        }
+    `;
+    document.head.appendChild(style);
+           } else if (menu === "Logout") {
+            	window.location.href = "/logout";
+            }
+        }
+    </script>
+	<script>
+	    // Assign Go variables to JavaScript variables
+	    var cpuUsage = {{.CpuUsage}};
+	    var ramUsage = {{.RamUsage}};
+	    var swapUsage = {{.SwapUsage}};
+	    var diskUsage = {{.DiskUsage}};
+	    async function updateSettings() {
+	        // Fetch values from the form
+	        var oldUsername = document.getElementById("oldUsername").value;
+	        var newUsername = document.getElementById("newUsername").value;
+	        var oldPassword = document.getElementById("oldPassword").value;
+	        var newPassword = document.getElementById("newPassword").value;
+	        var confirmPassword = document.getElementById("confirmPassword").value;
+	
+	        // Validate inputs (you may add more validation logic here)
+	
+	        // Prepare data to send to the server
+	        var data = {
+	            oldUsername: oldUsername,
+	            newUsername: newUsername,
+	            oldPassword: oldPassword,
+	            newPassword: newPassword,
+	            confirmPassword: confirmPassword
+	        };
+	
+	        // Make a POST request to the server
+	        try {
+	            const response = await fetch('/update-settings', {
+	                method: 'POST',
+	                headers: {
+	                    'Content-Type': 'application/json'
+	                },
+	                body: JSON.stringify(data)
+	            });
+	
+	            if (response.ok) {
+	                // Handle success, maybe show a success message to the user
+	                alert('تنظیمات با موفقیت به روزرسانی شد!');
+	            } else {
+	                // Handle error, show an error message or log the error
+	                alert('مشکل در بروزرسانی تنظیمات لطفا مجددا تلاش نمایید.');
+	            }
+	        } catch (error) {
+	            // Handle network errors
+	            console.error('مشکل در ارتباط', error);
+	            alert('مشکل در شبکه. لطفا دوباره تلاش کنید.');
+	        }
+	    }
+	async function uploadFile() {
+            var fileInput = document.getElementById("fileInput");
+            var file = fileInput.files[0];
+
+        // Check if a file is selected
+            if (!file) {
+                alert('لطفا یک فایل انتخاب کنید.');
+                return;
+            }
+
+        // Prepare data to send to the server
+            var formData = new FormData();
+            formData.append('file', file);
+
+        // Make a POST request to the server
+            try {
+                const response = await fetch('/upload-file', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                // Handle success, maybe show a success message to the user
+                    alert('فایل با موفقیت آپلود شد!');
+                } else {
+                // Handle error, show an error message or log the error
+                    alert('آپلود فایل ناموفق بود. لطفا دوباره تلاش کنید.');
+                }
+            } catch (error) {
+            // Handle network errors
+                console.error('مشکل در شبکه:', error);
+                alert('مشکل در شبکه. لطفا دوباره تلاش کنید.');
+            }
+        }
+    async function sendConfig() {
+        var configTextarea = document.getElementById("configTextarea");
+        var configText = configTextarea.value;
+
+        // Check if the textarea is not empty
+        if (!configText.trim()) {
+            alert('Please enter the configuration text.');
+            return;
+        }
+
+        // Prepare data to send to the server
+        var data = {
+            configText: configText
+        };
+
+        // Make a POST request to the server
+        try {
+            const response = await fetch('/send-config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                // Handle success, maybe show a success message to the user
+                alert('Configuration text sent successfully!');
+            } else {
+                // Handle error, show an error message or log the error
+                alert('Failed to send configuration text. Please try again.');
+            }
+        } catch (error) {
+            // Handle network errors
+            console.error('Network error:', error);
+            alert('Network error. Please try again.');
+        }
+    }
+    
+        function createCPUChart() {
+        var ctx = document.getElementById('CPUCanvas').getContext('2d');
+        var CPUChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [cpuUsage,100 - cpuUsage],
+                    backgroundColor: ['#3498DB', '#F1EBD8'],
+                    borderWidth: 1,
+                    rotation: -135,
+                    cutout: 80,
+                    circumference: 270  
+                }]
+            },
+            options: {
+                plugins: {
+                        title: {display: true,position: 'top',font: {size:20},text: ' CPU'},
+                        legend: {display: true, position: 'bottom', labels: { font: {size: 20}, boxWidth: 12}},
+  
+            },
+                
+		cutoutPercentage: 80,
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    }
+        function createRamChart() {
+        var ctx = document.getElementById('RamCanvas').getContext('2d');
+        var RamChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [{{.RamUsage}}, 100-{{.RamUsage}}],
+                    backgroundColor: ['#3498DB', '#F1EBD8'],
+                    borderWidth: 1,
+                    rotation: -135,
+                    cutout: 80,
+                    circumference: 270  
+                }]
+            },
+            options: {
+                plugins: {
+                        title: {display: true,position: 'top',font: {size:20},text: ' Ram'},
+                        legend: {display: true, position: 'bottom', labels: { font: {size: 20}, boxWidth: 12}}
+                },
+		cutoutPercentage: 80,
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    }
+        function createSwapChart() {
+        var ctx = document.getElementById('SwapCanvas').getContext('2d');
+        var SwapChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [{{.SwapUsage}}, 100-{{.SwapUsage}}],
+                    backgroundColor: ['#3498DB', '#F1EBD8'],
+                    borderWidth: 1,
+                    rotation: -135,
+                    cutout: 80,
+                    circumference: 270  
+                }]
+            },
+            options: {
+                plugins: {
+                        title: {display: true,position: 'top',font: {size:20},text: ' Swap'},
+                        legend: {display: true, position: 'bottom', labels: { font: {size: 20}, boxWidth: 12}}
+                },
+		cutoutPercentage: 80,
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    }
+        function createDiskChart() {
+        var ctx = document.getElementById('DiskCanvas').getContext('2d');
+        var DiskChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [{{.DiskUsage}}, 100-{{.DiskUsage}}],
+                    backgroundColor: ['#3498DB', '#F1EBD8'],
+                    borderWidth: 1,
+                    rotation: -135,
+                    cutout: 80,
+                    circumference: 270  
+                }]
+            },
+            options: {
+                plugins: {
+                        title: {display: true,position: 'top',font: {size:20},text: 'Disk'},
+                        legend: {display: true, position: 'bottom', labels: { font: {size: 20}, boxWidth: 12}}
+                },
+		cutoutPercentage: 80,
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    }    
+
+	</script>
+</body>
+</html>
