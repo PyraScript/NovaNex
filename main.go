@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"math"
 	"net"
 	"net/http"
 	"os"
@@ -17,7 +18,16 @@ import (
 	"math/big"
 	"bufio"
         "github.com/google/uuid"
-
+	"database/sql"
+	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/crypto/bcrypt"
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
+	"github.com/shirou/gopsutil/v3/disk"
+        "io/ioutil"
+        "encoding/json"
+        "io"
+        "path/filepath"
 )
 
 // User represents a user with username and password.
@@ -37,6 +47,22 @@ type ActiveMathProblem struct {
 	MathProblem   string
 	CorrectAnswer int64
 	Expiration    time.Time
+}
+
+// SystemData represents the data structure for system statistics
+type SystemData struct {
+	CpuUsage  float64
+	RamUsage  float64
+	SwapUsage float64
+	DiskUsage float64
+}
+
+type UpdateSettingsData struct {
+    OldUsername     string `json:"oldUsername"`
+    NewUsername     string `json:"newUsername"`
+    OldPassword     string `json:"oldPassword"`
+    NewPassword     string `json:"newPassword"`
+    ConfirmPassword string `json:"confirmPassword"`
 }
 
 var activeMathProblems map[string]ActiveMathProblem
@@ -65,6 +91,9 @@ var (
     logger *log.Logger
 )
 
+// Add the following global variable
+var db *sql.DB
+
 func init() {
     // Open the log file for writing. Append to the file if it exists.
     file, err := os.OpenFile("app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -81,9 +110,22 @@ func main() {
 	// Initialize the map
 	activeMathProblems = make(map[string]ActiveMathProblem)
 
+        // Open SQLite database connection
+        var err error
+        db, err = sql.Open("sqlite3", "NovaNex.db")
+        if err != nil {
+            log.Fatal(err)
+        }
+        defer db.Close()
+
+
 	// Handle requests
 	http.Handle("/login", http.HandlerFunc(loginHandler))
 	http.Handle("/panel", http.HandlerFunc(panelHandler))
+        http.Handle("/admin-panel", http.HandlerFunc(adminPanelHandler))
+        http.HandleFunc("/send-config", sendConfigHandler)
+        http.HandleFunc("/upload-file", uploadFileHandler)
+        http.HandleFunc("/update-settings", settingsHandler)
 
 	// Serve static files (including login.html and panel.html)
 	http.Handle("/", logRequest(http.FileServer(http.Dir("templates"))))
@@ -137,6 +179,44 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
             return
         }
 
+
+
+
+        // Check if it's an admin login
+        if strings.HasPrefix(username, "admin@") {
+            if validateAdmin(username, password) {
+                // Admin login successful
+                // You can perform admin-specific actions here
+
+                // Generate a session token for admin
+                sessionToken, err := generateSessionToken()
+                if err != nil {
+                    // Handle the error, for example, log it and return an internal server error
+                    log.Println("Error generating session token:", err)
+                    http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+                    return
+                }
+
+                // Store the admin session information
+                storeSession(username, sessionToken)
+
+                // Set the session token as a cookie
+                http.SetCookie(w, &http.Cookie{
+                    Name:    "session_token",
+                    Value:   sessionToken,
+                    Expires: time.Now().Add(60 * time.Minute), // Set the expiration time
+                })
+
+                // Redirect to the admin panel
+                http.Redirect(w, r, "/admin-panel", http.StatusSeeOther)
+                return
+            } else {
+                // Admin login failed
+                http.Error(w, "Invalid admin credentials", http.StatusUnauthorized)
+                return
+            }
+        } else {
+
 	if validateUser(username, password) {
 		// Generate a session token
 		sessionToken, err := generateSessionToken()
@@ -167,7 +247,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
             if incorrectLoginAttempts >= 5 {
             os.Exit(1)
         }
-        }
+        }}
     } else {
         fmt.Println("Not a POST request")
     }
@@ -691,6 +771,454 @@ func cleanupExpiredMathProblems() {
     for mathProblem, activeProblem := range activeMathProblems {
         if currentTimestamp.After(activeProblem.Expiration) {
             delete(activeMathProblems, mathProblem)
+        }
+    }
+}
+
+
+
+// Function to hash passwords
+func hashPassword(password string) (string, error) {
+    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+    return string(hashedPassword), err
+}
+
+// Function to validate admin credentials
+func validateAdmin(username, password string) bool {
+    // Query the database to retrieve the hashed password for the given username
+    var hashedPassword string
+    err := db.QueryRow("SELECT password FROM admins WHERE username = ?", username).Scan(&hashedPassword)
+    if err != nil {
+        log.Println("Error querying database:", err)
+        return false
+    }
+
+    // Compare the entered password with the hashed password from the database
+    err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+    return err == nil
+}
+
+func adminPanelHandler(w http.ResponseWriter, r *http.Request) {
+        // Retrieve the session token from the request (e.g., from cookies)
+        sessionToken, err := r.Cookie("session_token")
+        if err != nil {
+                // No session token, redirect to login
+                http.Redirect(w, r, "/login", http.StatusSeeOther)
+                return
+        }
+
+        // Validate the session token
+        if !validateSession(sessionToken.Value) {
+                // Invalid session token, redirect to login
+                http.Redirect(w, r, "/login", http.StatusSeeOther)
+                return
+        }
+
+        // Extract the username from the session information
+        username := getUsernameFromSession(sessionToken.Value)
+        if username == "" {
+                // Unable to retrieve the username, redirect to login
+                http.Redirect(w, r, "/login", http.StatusSeeOther)
+                return
+        }
+
+	// Fetch system data
+	systemData, err := fetchSystemData()
+	if err != nil {
+		// Handle error (log or return an error response)
+		log.Println("Error fetching system data:", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+    // If authenticated, render the panel template
+    tmpl, err := template.ParseFiles("templates/admin-panel.html")
+    if err != nil {
+        // If there is an error parsing the panel template, log the error
+        log.Println("Error parsing panel template:", err)
+        // Return an internal server error to the client
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+        return
+    }
+
+
+	// Create a map to store the variables you want to pass to the template
+	data := map[string]interface{}{
+		"Username":   username,
+		"CpuUsage":   systemData.CpuUsage,
+		"RamUsage":   systemData.RamUsage,
+		"SwapUsage":  systemData.SwapUsage,
+		"DiskUsage":  systemData.DiskUsage,
+	}
+
+    // Execute the template with the provided data and write the output to the response writer
+    err = tmpl.Execute(w, data)
+    if err != nil {
+        // If there is an error executing the template, log the error
+        log.Println("Error executing panel template:", err)
+        // Return an internal server error to the client
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+        return
+    }
+
+}
+
+func fetchSystemData() (*SystemData, error) {
+	// Fetch CPU usage
+	cpuPercentages, err := cpu.Percent(0, false)
+	if err != nil {
+		return nil, err
+	}
+	cpuUsage := math.Round(cpuPercentages[0]*100)/100
+
+	// Fetch RAM usage
+	memInfo, err := mem.VirtualMemory()
+	if err != nil {
+		return nil, err
+	}
+	ramUsage := math.Round(memInfo.UsedPercent*100)/100
+
+	// Fetch Swap usage
+	swapInfo, err := mem.SwapMemory()
+	if err != nil {
+		return nil, err
+	}
+	swapUsage := math.Round(swapInfo.UsedPercent*100)/100
+
+	// Fetch Disk usage
+	diskInfo, err := disk.Usage("/")
+	if err != nil {
+		return nil, err
+	}
+	diskUsage := math.Round(diskInfo.UsedPercent*100)/100
+
+	return &SystemData{
+		CpuUsage:  cpuUsage,
+		RamUsage:  ramUsage,
+		SwapUsage: swapUsage,
+		DiskUsage: diskUsage,
+	}, nil
+}
+
+func sendConfigHandler(w http.ResponseWriter, r *http.Request) {
+    // Retrieve the session token from the request (e.g., from cookies)
+    sessionToken, err := r.Cookie("session_token")
+    if err != nil {
+        // No session token, redirect to login
+        http.Redirect(w, r, "/login", http.StatusSeeOther)
+        return
+    }
+
+    // Validate the session token
+    if !validateSession(sessionToken.Value) {
+        // Invalid session token, redirect to login
+        http.Redirect(w, r, "/login", http.StatusSeeOther)
+        return
+    }
+
+    // Extract the username from the session information
+    username := getUsernameFromSession(sessionToken.Value)
+    if username == "" {
+        // Unable to retrieve the username, redirect to login
+        http.Redirect(w, r, "/login", http.StatusSeeOther)
+        return
+    }
+
+    // Check if the request method is POST
+    if r.Method != http.MethodPost {
+        http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+        return
+    }
+
+    // Parse the request body
+    body, err := ioutil.ReadAll(r.Body)
+    if err != nil {
+        http.Error(w, "Error reading request body", http.StatusInternalServerError)
+        return
+    }
+
+    // Extract the configuration text from the request body
+    var configText struct {
+        ConfigText string `json:"configText"`
+    }
+
+    if err := json.Unmarshal(body, &configText); err != nil {
+        http.Error(w, "Error decoding JSON", http.StatusBadRequest)
+        return
+    }
+
+    // Save the configuration text to the qrcodefile.txt file
+    err = ioutil.WriteFile("qrcodefile.txt", []byte(configText.ConfigText), 0644)
+    if err != nil {
+        http.Error(w, "Error saving configuration text", http.StatusInternalServerError)
+        return
+    }
+
+    // Respond with a success message
+    fmt.Fprint(w, "Configuration text saved successfully")
+}
+
+func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
+    // Retrieve the session token from the request (e.g., from cookies)
+    sessionToken, err := r.Cookie("session_token")
+    if err != nil {
+        // No session token, redirect to login
+        http.Redirect(w, r, "/login", http.StatusSeeOther)
+        return
+    }
+
+    // Validate the session token
+    if !validateSession(sessionToken.Value) {
+        // Invalid session token, redirect to login
+        http.Redirect(w, r, "/login", http.StatusSeeOther)
+        return
+    }
+
+    // Extract the username from the session information
+    username := getUsernameFromSession(sessionToken.Value)
+    if username == "" {
+        // Unable to retrieve the username, redirect to login
+        http.Redirect(w, r, "/login", http.StatusSeeOther)
+        return
+    }
+    // Parse the form data, including the uploaded file
+    errfsize := r.ParseMultipartForm(10 << 20) // 10 MB limit for the file size
+    if errfsize != nil {
+        http.Error(w, "Unable to parse form", http.StatusInternalServerError)
+        return
+    }
+
+    // Get the file from the request
+    file, handler, err := r.FormFile("file")
+    if err != nil {
+        http.Error(w, "Error retrieving the file", http.StatusBadRequest)
+        return
+    }
+    defer file.Close()
+
+    // Create a file with a unique name in the "templates" directory
+    fileName := filepath.Join("templates", handler.Filename)
+    dest, err := os.Create(fileName)
+    if err != nil {
+        http.Error(w, "Unable to create the file", http.StatusInternalServerError)
+        return
+    }
+    defer dest.Close()
+
+    // Copy the uploaded file to the destination file
+    _, err = io.Copy(dest, file)
+    if err != nil {
+        http.Error(w, "Unable to copy the file", http.StatusInternalServerError)
+        return
+    }
+
+    // Return a success message
+    w.Write([]byte("File uploaded successfully"))
+}
+
+func settingsHandler(w http.ResponseWriter, r *http.Request) {
+    // Retrieve the session token from the request (e.g., from cookies)
+    sessionToken, err := r.Cookie("session_token")
+    if err != nil {
+        // No session token, redirect to login
+        http.Redirect(w, r, "/login", http.StatusSeeOther)
+        return
+    }
+
+    // Validate the session token
+    if !validateSession(sessionToken.Value) {
+        // Invalid session token, redirect to login
+        http.Redirect(w, r, "/login", http.StatusSeeOther)
+        return
+    }
+
+    // Extract the username from the session information
+    username := getUsernameFromSession(sessionToken.Value)
+    if username == "" {
+        // Unable to retrieve the username, redirect to login
+        http.Redirect(w, r, "/login", http.StatusSeeOther)
+        return
+    }
+
+    // If the form is submitted, update the settings
+    if r.Method == http.MethodPost {
+        // Decode JSON data
+        var data UpdateSettingsData
+        decoder := json.NewDecoder(r.Body)
+        err := decoder.Decode(&data)
+        if err != nil {
+            fmt.Println("Error decoding JSON:", err)
+            http.Error(w, "Bad Request", http.StatusBadRequest)
+            return
+        }
+
+        // Update the username and password in the database
+        if data.NewUsername != "" {
+            // Update the username (you may add more logic here)
+            // Make sure the new username starts with "admin@"
+            if !strings.HasPrefix(data.NewUsername, "admin@") {
+                http.Error(w, "New username must start with 'admin@'", http.StatusBadRequest)
+                return
+            }
+            // Validate old username and password (you may add more validation logic here)
+            if data.OldUsername != username {
+                http.Error(w, "Invalid old username", http.StatusBadRequest)
+                return
+            }
+
+			// Update the username in the database
+			err := updateUsernameInDatabase(username, data.NewUsername)
+			if err != nil {
+				fmt.Println("Error updating username in database:", err)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				return
+			}
+        // Update the session with the new username
+        updateSessionUsername(sessionToken.Value, data.NewUsername)
+
+        // Update the current username with the new one
+        username = data.NewUsername
+        }
+
+        if data.NewPassword != "" {
+            // Update the password (you may add more logic here)
+            // Update the password in the database (replace this with your actual update logic)
+            if data.NewPassword != data.ConfirmPassword {
+                http.Error(w, "New password and confirm password do not match", http.StatusBadRequest)
+                return
+            }
+            // Check old password in the database (replace this with your actual database check)
+            if !checkPasswordInDatabase(username, data.OldPassword) {
+                http.Error(w, "Invalid old password", http.StatusBadRequest)
+                return
+            }
+	    // Hash the new password
+	    hashedPassword, err := hashPassword(data.NewPassword)
+	    if err != nil {
+		fmt.Println("Error hashing password:", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	    }
+	    // Update the password in the database
+	    err = updatePasswordInDatabase(username, hashedPassword)
+	    if err != nil {
+		fmt.Println("Error updating password in database:", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	    }
+        }
+
+        // Redirect to the admin panel after updating settings
+        http.Redirect(w, r, "/admin-panel", http.StatusSeeOther)
+        return
+    }
+
+    // If not a POST request, render the settings form
+    tmpl, err := template.ParseFiles("templates/admin-panel.html")
+    if err != nil {
+        fmt.Println("Error parsing settings template:", err)
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+        return
+    }
+
+    // Create a map to store the variables you want to pass to the template
+    data := map[string]interface{}{
+        "Username": username,
+    }
+
+    // Execute the template with the provided data and write the output to the response writer
+    err = tmpl.Execute(w, data)
+    if err != nil {
+        fmt.Println("Error executing settings template:", err)
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+        return
+    }
+}
+
+// Update username in the database
+func updateUsernameInDatabase(oldUsername, newUsername string) error {
+	stmt, err := db.Prepare("UPDATE admins SET username = ? WHERE username = ?")
+	if err != nil {
+		return fmt.Errorf("error preparing update username statement: %v", err)
+	}
+	defer stmt.Close()
+
+	result, err := stmt.Exec(newUsername, oldUsername)
+	if err != nil {
+		return fmt.Errorf("error executing update username statement: %v", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("error getting rows affected: %v", err)
+	}
+
+	if rowsAffected != 1 {
+		return fmt.Errorf("expected 1 row affected, got %d", rowsAffected)
+	}
+
+	return nil
+}
+
+// Check password in the database
+func checkPasswordInDatabase(username, password string) bool {
+	var hashedPassword string
+	err := db.QueryRow("SELECT password FROM admins WHERE username = ?", username).Scan(&hashedPassword)
+	if err == sql.ErrNoRows {
+		log.Printf("User not found in the database: %s", username)
+		return false
+	} else if err != nil {
+		log.Printf("Error querying password from database: %v", err)
+		return false
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	if err != nil {
+		log.Printf("Password check failed for user %s", username)
+		return false
+	}
+
+	log.Printf("Password check successful for user %s", username)
+
+	return true
+}
+
+
+// Update password in the database
+func updatePasswordInDatabase(username, newPassword string) error {
+
+	stmt, err := db.Prepare("UPDATE admins SET password = ? WHERE username = ?")
+	if err != nil {
+		return fmt.Errorf("error preparing update password statement: %v", err)
+	}
+	defer stmt.Close()
+
+	result, err := stmt.Exec(newPassword, username)
+	if err != nil {
+		return fmt.Errorf("error executing update password statement: %v", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("error getting rows affected: %v", err)
+	}
+
+	if rowsAffected != 1 {
+		return fmt.Errorf("expected 1 row affected, got %d", rowsAffected)
+	}
+
+	return nil
+}
+
+// Add the following function
+func updateSessionUsername(token string, newUsername string) {
+    sessionMutex.Lock()
+    defer sessionMutex.Unlock()
+
+    for i, session := range userSessions {
+        if session.Token == token {
+            userSessions[i].Username = newUsername
+            return
         }
     }
 }
