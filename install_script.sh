@@ -39,22 +39,23 @@ install_web_panel() {
     ./extractor.sh
     ./info_extractor.sh
 
-    # Initialize the SQLite database with the admins table
-    sqlite3 NovaNex.db <<EOF
-    CREATE TABLE IF NOT EXISTS admins (
-        username TEXT NOT NULL,
-        password TEXT NOT NULL
-    );
+# Initialize the SQLite database with the admins table
+sqlite3 NovaNex.db <<'EOF'
+CREATE TABLE IF NOT EXISTS admins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL,
+    password TEXT NOT NULL
+);
 EOF
 
-    # Generate random username and password
-    randomUsername="admin@$(openssl rand -hex 4)"
-    randomPassword=$(openssl rand -hex 8)
-    hashedPassword=$(hashPassword "$randomPassword")
+# Generate random username and password
+randomUsername="admin@$(openssl rand -hex 4)"
+randomPassword=$(openssl rand -hex 8)
+hashedPassword=$(hashPassword "$randomPassword")
 
-    # Store random username and hashed password in the database
-    sqlite3 NovaNex.db <<EOF
-    INSERT INTO admins (username, password) VALUES ('$randomUsername', '$hashedPassword');
+# Store random username and hashed password in the database
+sqlite3 NovaNex.db <<EOF
+INSERT INTO admins (username, password) VALUES ('$randomUsername', '$hashedPassword');
 EOF
 
     # Display generated username and password to the administrator
