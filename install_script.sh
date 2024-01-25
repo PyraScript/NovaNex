@@ -8,6 +8,11 @@ BLUE='\033[1;34m'
 CYAN='\033[1;36m'
 NC='\033[0m' # No Color
 
+hashPassword() {
+    # Use bcrypt to hash the password
+    bcrypt-cli -c 10 "$1"
+}
+
 install_web_panel() {
     echo -e "${BLUE}Installing Go and web panel...${NC}"
 
@@ -45,11 +50,12 @@ EOF
 
     # Generate random username and password
     randomUsername="admin@$(openssl rand -hex 4)"
-    randomPassword=$(bcrypt-cli -r 12)  # Generate a random bcrypt hash
+    randomPassword=$(openssl rand -hex 8)
+    hashedPassword=$(hashPassword "$randomPassword")
 
     # Store random username and hashed password in the database
     sqlite3 NovaNex.db <<EOF
-    INSERT INTO admins (username, password) VALUES ('$randomUsername', '$randomPassword');
+    INSERT INTO admins (username, password) VALUES ('$randomUsername', '$hashedPassword');
 EOF
 
     # Display generated username and password to the administrator
