@@ -51,6 +51,7 @@ EOF
 # Generate random username and password
 randomUsername="admin@$(openssl rand -hex 4)"
 randomPassword=$(openssl rand -hex 8)
+# Use the hashPassword function to hash the password
 hashedPassword=$(hashPassword "$randomPassword")
 
 # Store random username and hashed password in the database
