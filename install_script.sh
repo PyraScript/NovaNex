@@ -48,17 +48,14 @@ randomUsername="admin@$(openssl rand -hex 4)"
 randomPassword=$(openssl rand -hex 8)
 hashedPassword= $(mkpasswd -m bcrypt -s 10 "$1")
 
-# Create a temporary SQL file
-sql_file=$(mktemp)
-trap 'rm -f "$sql_file"' EXIT
+# Create an SQL script file
+echo "INSERT INTO admins (username, password) VALUES ('$randomUsername', '$hashedPassword');" > insert.sql
 
-# Write SQL commands to the temporary file
-cat <<EOF > "$sql_file"
-INSERT INTO admins (username, password) VALUES ('$randomUsername', '$hashedPassword');
-EOF
+# Use the SQL script file to insert data into the database
+sqlite3 NovaNex.db < insert.sql
 
-# Use the temporary file with sqlite3
-sqlite3 NovaNex.db < "$sql_file"
+# Remove the temporary SQL script file
+rm insert.sql
 
     # Display generated username and password to the administrator
     echo -e "${GREEN}Generated Admin Credentials:${NC}"
