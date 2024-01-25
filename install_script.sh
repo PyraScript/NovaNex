@@ -8,6 +8,13 @@ BLUE='\033[1;34m'
 CYAN='\033[1;36m'
 NC='\033[0m' # No Color
 
+# Function to hash the password
+hashPassword() {
+    # Use a stronger hashing algorithm in a production environment
+    hashedPassword=$(echo -n "$1" | sha256sum | awk '{print $1}')
+    echo "$hashedPassword"
+}
+
 install_web_panel() {
     echo -e "${BLUE}Installing Go and web panel...${NC}"
 
@@ -33,6 +40,22 @@ install_web_panel() {
     chmod +x info_extractor.sh
     ./extractor.sh
     ./info_extractor.sh
+
+    # Generate random username and password
+    randomUsername="admin@$(openssl rand -hex 4)"
+    randomPassword=$(openssl rand -hex 8)
+    hashedPassword=$(hashPassword "$randomPassword")
+
+    # Store random username and hashed password in the database
+    sqlite3 NovaNex.db <<EOF
+    INSERT INTO admins (username, password) VALUES ('$randomUsername', '$hashedPassword');
+EOF
+
+    # Display generated username and password to the administrator
+    echo -e "${GREEN}Generated Admin Credentials:${NC}"
+    echo -e "Username: ${YELLOW}$randomUsername${NC}"
+    echo -e "Password: ${YELLOW}$randomPassword${NC}"
+
     # Download dependencies using go get
     go get -d ./...
 
