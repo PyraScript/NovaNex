@@ -9,8 +9,8 @@ CYAN='\033[1;36m'
 NC='\033[0m' # No Color
 
 hashPassword() {
-    # Use bcrypt to hash the password
-    bcrypt-cli -c 10 "$1"
+    # Use mkpasswd to hash the password with bcrypt
+    mkpasswd -m bcrypt -s 10 "$1"
 }
 
 install_web_panel() {
@@ -23,7 +23,7 @@ install_web_panel() {
     sudo apt-get update
 
     # Install Go using apt-get
-    sudo apt-get install -y golang gccgo sqlite3 bcrypt-cli
+    sudo apt-get install -y golang gccgo sqlite3 whois
 
     # Clone the repository (replace with your repository URL)
     sudo git clone https://github.com/PyraScript/NovaNex.git /usr/local/web_panel
