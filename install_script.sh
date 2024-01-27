@@ -41,11 +41,12 @@ CREATE TABLE IF NOT EXISTS admins (
     password TEXT NOT NULL
 );
 EOF
+snap install bcrypt-tool
 
 # Generate random username and password
 randomUsername="admin@$(openssl rand -hex 4)"
 randomPassword=$(openssl rand -hex 8)
-hashedPassword= $(mkpasswd -m bcrypt -s 10 "$randomPassword")
+hashedPassword= $(bcrypt-tool hash "$randomPassword")
 echo hashedPassword
 # Store random username and hashed password in the database
 sqlite3 NovaNex.db <<EOF
