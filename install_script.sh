@@ -41,6 +41,15 @@ CREATE TABLE IF NOT EXISTS admins (
     password TEXT NOT NULL
 );
 EOF
+
+# Initialize the SQLite database with the Clients_email_id table
+sqlite3 NovaNex.db <<'EOF'
+CREATE TABLE IF NOT EXISTS Clients_email_id (
+    email TEXT NOT NULL,
+    id TEXT NOT NULL
+);
+EOF
+
 snap install bcrypt-tool
 
 # Generate random username and password
