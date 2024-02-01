@@ -54,6 +54,7 @@ EOF
 sqlite3 NovaNex.db <<'EOF'
 CREATE TABLE IF NOT EXISTS user_session (
     user_id TEXT PRIMARY KEY,
+    email TEXT NOT NULL,
     token TEXT
 );
 EOF
