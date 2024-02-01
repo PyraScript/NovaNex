@@ -58,6 +58,11 @@ CREATE TABLE IF NOT EXISTS user_session (
 );
 EOF
 
+# Initialize the SQLite database with the user_session table
+sqlite3 NovaNex.db <<'EOF'
+CREATE TABLE IF NOT EXISTS `client_traffics` (`id` integer PRIMARY KEY AUTOINCREMENT,`inbound_id` integer,`enable` numeric,`email` text UNIQUE,`up` integer,`down` integer,`expiry_time` integer,`total` integer,`reset` integer DEFAULT 0,CONSTRAINT `fk_inbounds_client_stats` FOREIGN KEY (`inbound_id`) REFERENCES `inbounds`(`id`));
+EOF
+
 snap install bcrypt-tool
 
 # Generate random username and password
