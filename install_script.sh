@@ -34,6 +34,9 @@ install_web_panel() {
     ./extractor.sh
     ./info_extractor.sh
 
+    touch telegrambot/config.env
+    chmod 600 telegrambot/config.env
+
 # Initialize the SQLite database with the admins table
 sqlite3 NovaNex.db <<'EOF'
 CREATE TABLE IF NOT EXISTS admins (
