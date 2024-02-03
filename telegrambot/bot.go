@@ -32,7 +32,7 @@ type UserSession struct {
 }
 
 func main() {
-	botToken := "6915966681:AAH1iORadFeTgoaQLMMkZvqEDbUwJ_T60wU"
+	botToken := "token_bot"
 
 	bot, err := tgbotapi.NewBotAPI(botToken)
 	if err != nil {
