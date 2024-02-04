@@ -17,13 +17,15 @@ import (
 	"bufio"
         "github.com/google/uuid"
 	"math/big"
-    "sync"
+	"sync"
+	"github.com/joho/godotenv"
 
 
 )
 
 var usersMutex sync.Mutex
-
+var botToken string
+var welcomeTexts map[string]string
 
 // UserSession represents a user session information
 type UserSession struct {
@@ -31,8 +33,20 @@ type UserSession struct {
 	SessionToken  string
 }
 
+func init() {
+    // Load environment variables from the configuration file
+    if err := godotenv.Load("config.env"); err != nil {
+        log.Fatal("Error loading environment variables:", err)
+    }
+    botToken = os.Getenv("TELEGRAM_BOT_TOKEN")
+    if botToken == "" {
+        log.Fatal("Telegram bot token is not set. Please set the TELEGRAM_BOT_TOKEN environment variable.")
+    }
+    loadTexts()
+}
+
+
 func main() {
-	botToken := "token_bot"
 
 	bot, err := tgbotapi.NewBotAPI(botToken)
 	if err != nil {
@@ -290,7 +304,7 @@ func handleLoggedInCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message) stri
     // Create an inline keyboard
     keyboard := tgbotapi.NewInlineKeyboardMarkup(
         tgbotapi.NewInlineKeyboardRow(
-            tgbotapi.NewInlineKeyboardButtonData("وضعیت کانفیگ", "/configinfo"),
+            tgbotapi.NewInlineKeyboardButtonData("اطلاعات اشتراک", "/configinfo"),
             tgbotapi.NewInlineKeyboardButtonData("کانفیگ جدید", "/newconfig"),
         ),
         tgbotapi.NewInlineKeyboardRow(
@@ -301,9 +315,7 @@ func handleLoggedInCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message) stri
         ),
     )
 
-    respone := fmt.Sprintf("به %s خوش آمدید!                                        \n"+
-"این پنل اطلاعات مربوط به اشتراک شما را در اختیارتان قرار می دهد.\n"+
-"لطفا یکی از گزینه های زیر را انتخاب نمایید:", bot.Self.UserName)
+    respone := fmt.Sprintf(welcomeTexts["welcome_logged_in"], bot.Self.UserName)
     // Set the reply markup with the inline keyboard
     replyMarkup := tgbotapi.NewMessage(message.Chat.ID, respone)
     replyMarkup.ReplyMarkup = keyboard
@@ -327,9 +339,12 @@ func handleNotLoggedInCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message) s
             tgbotapi.NewInlineKeyboardButtonData("ورود", "/login"),
             tgbotapi.NewInlineKeyboardButtonData("🛍️ خرید کانفیگ", "/buyconfig"),
         ),
+        tgbotapi.NewInlineKeyboardRow(
+            tgbotapi.NewInlineKeyboardButtonData("سرویس های موجود", "/servers"),
+        ),
     )
 
-    respone := fmt.Sprintf("به %s خوش آمدید!                                        \nلطفا یکی از گزینه های زیر را انتخاب نمایید:", bot.Self.UserName)
+    respone := fmt.Sprintf(welcomeTexts["welcome_not_logged_in"], bot.Self.UserName)
     // Set the reply markup with the inline keyboard
     replyMarkup := tgbotapi.NewMessage(message.Chat.ID, respone)
     replyMarkup.ReplyMarkup = keyboard
@@ -482,28 +497,34 @@ func copyClientTraffics() error {
 		return err
 	}
 
-	// Insert or update data in destination table
-	for rows.Next() {
-		var id, inboundID, enable, up, down, expiryTime, total, reset int
-		var email string
-		err := rows.Scan(&id, &inboundID, &enable, &email, &up, &down, &expiryTime, &total, &reset)
-		if err != nil {
-			return err
-		}
+// Clear the destination table
+_, err = destDB.Exec("DELETE FROM client_traffics")
+if err != nil {
+    return err
+}
 
-		// Try to update the record in case the user already exists
-		_, err = destDB.Exec("UPDATE client_traffics SET inbound_id=?, enable=?, up=?, down=?, expiry_time=?, total=?, reset=? WHERE email=?",
-			inboundID, enable, up, down, expiryTime, total, reset, email)
+_, err = destDB.Exec("DELETE FROM sqlite_sequence WHERE name='client_traffics'")
+if err != nil {
+    return err
+}
 
-		if err != nil {
-			// If the user doesn't exist in the destination table, insert a new record
-			_, err := destDB.Exec("INSERT INTO client_traffics (inbound_id, enable, email, up, down, expiry_time, total, reset) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-				inboundID, enable, email, up, down, expiryTime, total, reset)
-			if err != nil {
-				return err
-			}
-		}
-	}
+// Insert data into the destination table
+for rows.Next() {
+    var id, inboundID, enable, up, down, expiryTime, total, reset int
+    var email string
+    err := rows.Scan(&id, &inboundID, &enable, &email, &up, &down, &expiryTime, &total, &reset)
+    if err != nil {
+        return err
+    }
+
+    _, err = destDB.Exec(`
+        INSERT INTO client_traffics (inbound_id, enable, email, up, down, expiry_time, total, reset)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        inboundID, enable, email, up, down, expiryTime, total, reset)
+    if err != nil {
+        return err
+    }
+}
 
 	return nil
 }
@@ -694,7 +715,7 @@ func handleInlineButtonPress(bot *tgbotapi.BotAPI, message *tgbotapi.Message, ca
             sendMessage(bot, message.Chat.ID, response)
 	    break
         }
-	copyClientTraffics();
+	copyClientTraffics()
 
         traffics, remainingDays := getClientInfo(email)
         response := fmt.Sprintf("حجم کل ترافیک: %d GB\nمیزان مصرف کل شما: %d MB\n(آپلود: %d MB, دانلود: %d MB)\n"+
@@ -759,6 +780,11 @@ func handleInlineButtonPress(bot *tgbotapi.BotAPI, message *tgbotapi.Message, ca
         // Handle the "/buyconfig" button press
         response := "You pressed the /buyconfig button!"
         sendMessage(bot, message.Chat.ID, response)
+    case "/servers":
+        // Handle the "/buyconfig" button press
+        response := "در حال حاضر سرور های زیر موجود هستند:\n"+"آلمان 🇩🇪\n"
+        sendMessage(bot, message.Chat.ID, response)
+
     }
 }
 
@@ -816,7 +842,58 @@ func ShowMenuUpdate(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
     // Determine which menu to display based on login status
     if isLoggedIn {
         handleLoggedInCommand(bot, message)
-    } else {
-        handleNotLoggedInCommand(bot, message)
+    }// else {
+//        handleNotLoggedInCommand(bot, message)
+//    }
+}
+
+
+func loadTexts() {
+    // Connect to the database
+    db, err := sql.Open("sqlite3", "/usr/local/web_panel/NovaNex.db")
+    if err != nil {
+        log.Fatal("Error opening database:", err)
     }
+    defer db.Close()
+
+    // Query the texts from the database
+    rows, err := db.Query("SELECT key, text FROM texts_table")
+    if err != nil {
+        log.Fatal("Error querying texts from database:", err)
+    }
+    defer rows.Close()
+
+    // Iterate through the rows and store the texts in a map
+    textsMap := make(map[string]string)
+    for rows.Next() {
+        var key, text string
+        if err := rows.Scan(&key, &text); err != nil {
+            log.Fatal("Error scanning text row:", err)
+        }
+        textsMap[key] = text
+    }
+
+    // Store the texts map in a global variable or use it as needed
+    // For example, you can use a map[string]string in the package scope:
+    welcomeTexts = textsMap
+}
+
+func updateText(key, newText string) error {
+    // Connect to the database
+    db, err := sql.Open("sqlite3", "/usr/local/web_panel/NovaNex.db")
+    if err != nil {
+        return fmt.Errorf("error opening database: %v", err)
+    }
+    defer db.Close()
+
+    // Update the text in the database
+    _, err = db.Exec("UPDATE texts_table SET text = ? WHERE key = ?", newText, key)
+    if err != nil {
+        return fmt.Errorf("error updating text in database: %v", err)
+    }
+
+    // Update the global variable if needed
+    welcomeTexts[key] = newText
+
+    return nil
 }
