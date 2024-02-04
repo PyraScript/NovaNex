@@ -1,0 +1,138 @@
+#!/bin/bash
+
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+novanex_update() {
+    echo "Updating web panel & telegram bot..."
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/PyraScript/NovaNex/main/install_script.sh)"
+}
+
+web_panel_start() {
+    echo "Starting web panel..."
+    sudo systemctl start web_panel.service
+}
+
+web_panel_stop() {
+    echo "Stopping web panel..."
+    sudo systemctl stop web_panel.service
+}
+
+web_panel_restart() {
+    echo "Restarting web panel..."
+    pkill -f "main"
+    sudo systemctl restart web_panel.service
+}
+
+web_panel_status() {
+    echo "Checking web panel status..."
+    sudo systemctl status web_panel.service
+}
+
+telegram_bot_start() {
+    echo "Starting telegram bot..."
+    sudo systemctl start telegrambot.service
+}
+
+telegram_bot_stop() {
+    echo "Stopping telegram bot..."
+    sudo systemctl stop telegrambot.service
+}
+
+telegram_bot_restart() {
+    echo "Restarting telegram bot..."
+    sudo systemctl restart telegrambot.service
+}
+
+telegram_bot_status() {
+    echo "Checking telegram bot status..."
+    sudo systemctl status telegrambot.service
+}
+
+restart_web_panel_credentials() {
+    echo "Removing previous username and password from the database..."
+    # Remove all entries from the admins table
+    sqlite3 /usr/local/web_panel/NovaNex.db "DELETE FROM admins;"
+
+    echo "Generating new admin credentials..."
+    randomUsername="admin@$(openssl rand -hex 4)"
+    randomPassword=$(openssl rand -hex 8)
+    hashedPassword=$(bcrypt-tool hash "$randomPassword")
+
+    # Store random username and hashed password in the database
+    sqlite3 /usr/local/web_panel/NovaNex.db <<EOF
+INSERT INTO admins (username, password) VALUES ('$randomUsername', '$hashedPassword');
+EOF
+
+    # Display generated username and password to the administrator
+    echo -e "${GREEN}Generated Admin Credentials:${NC}"
+    echo -e "Username: ${YELLOW}$randomUsername${NC}"
+    echo -e "Password: ${YELLOW}$randomPassword${NC}"
+}
+
+ssl_certificate_management() {
+    echo "Installing Certbot and required packages..."
+    sudo apt-get install certbot python3-certbot-nginx -y
+
+    read -p "Enter your email address for SSL certificate: " email
+    read -p "Enter your domain/subdomain for SSL certificate: " domain
+
+    echo "Obtaining SSL certificate for $domain..."
+    sudo certbot -m $email -d $domain
+
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}SSL certificate obtained successfully.${NC}"
+    else
+        echo -e "${RED}Failed to obtain SSL certificate.${NC}"
+    fi
+}
+
+set_telegram_bot_token() {
+    read -p "Enter your Telegram Bot Token: " botToken
+    echo "TELEGRAM_BOT_TOKEN=$botToken" | sudo tee /usr/local/web_panel/telegrambot/config.env
+    echo "Telegram Bot Token set successfully."
+}
+
+while true; do
+    echo -e "${GREEN}NovaNex Panel Menu${NC}"
+    echo -e "${GREEN}1. Update web panel & telegram bot${NC}"
+    echo -e "${GREEN}--------------------------------------------${NC}"
+    echo -e "${GREEN}2. web panel start${NC}"
+    echo -e "${GREEN}3. web panel stop${NC}"
+    echo -e "${GREEN}4. web panel restart${NC}"
+    echo -e "${GREEN}5. web panel status${NC}"
+    echo -e "${GREEN}--------------------------------------------${NC}"
+    echo -e "${GREEN}6. telegram bot start${NC}"
+    echo -e "${GREEN}7. telegram bot stop${NC}"
+    echo -e "${GREEN}8. telegram bot restart${NC}"
+    echo -e "${GREEN}9. telegram bot status${NC}"
+    echo -e "${GREEN}--------------------------------------------${NC}"
+    echo -e "${GREEN}10. ssl certificate management${NC}"
+    echo -e "${GREEN}--------------------------------------------${NC}"
+    echo -e "${GREEN}11. restart web panel username and password${NC}"
+    echo -e "${GREEN}--------------------------------------------${NC}"
+    echo -e "${GREEN}12. set telegram bot token${NC}"
+    echo -e "${GREEN}--------------------------------------------${NC}"
+    echo -e "${GREEN}00. exit${NC}"
+    
+    read -p "Enter your choice: " choice
+
+    case $choice in
+        1) novanex_update;;
+        2) web_panel_start;;
+        3) web_panel_stop;;
+        4) web_panel_restart;;
+        5) web_panel_status;;
+        6) telegram_bot_start;;
+        7) telegram_bot_stop;;
+        8) telegram_bot_restart;;
+        9) telegram_bot_status;;
+        10) ssl_certificate_management;;
+        11) restart_web_panel_credentials;;
+        12) set_telegram_bot_token;;
+        00) exit;;
+        *) echo "Invalid choice. Please try again.";;
+    esac
+done
