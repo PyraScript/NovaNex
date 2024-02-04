@@ -10,7 +10,7 @@
     <title>صفحه کاربری مدیر</title>
     <style>
         body {
-            background: #F9F9F9; /* Light gray background */
+            background: #ecf0f1;
             color: #333; /* Dark gray text color */
             font-family: "Noto Naskh Arabic", Arial, sans-serif;
             display: flex;
@@ -20,7 +20,7 @@
             margin: 0;
         }
         .top-bar {
-            background: #ECF0F1; /* Dodger blue top bar color */
+            background: #ffffff; /* Dodger blue top bar color */
             padding: 10px;
             width: 100%;
             text-align: center;
@@ -35,7 +35,7 @@
             gap: 20px; /* Add spacing between the sidebar and main content */
         }
         .sidebar {
-            background: #ECF0F1; /* Light silver sidebar color */
+            background: #ffffff; /* Light silver sidebar color */
             color: #333; /* Dark gray text color for sidebar */
             padding: 20px;
             width: 100%;
@@ -58,8 +58,13 @@
         .menu:hover {
             background: #D5DBDB; /* Lighter silver background on hover */
         }
+.menu.active {
+    background-color: #5da5db; /* Change this to the desired color */
+    color: #ffffff; /* Change this to the desired text color */
+}
+
         .content {
-            background: #FFFFFF; /* White main content background */
+            background: #ffffff; /* White main content background */
             padding: 20px;
             width: 100%;
             box-sizing: border-box;
@@ -107,9 +112,105 @@
     	    transform: translate(-50%, -50%);
     	    font-size: 1.5em; /* Adjust the font size as needed */
 	}
-        h1, p, .menu {
+        h1, p, .menu, button {
 	        font-family: "Noto Naskh Arabic", Arial, sans-serif;
         }
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 20px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 20px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #2196F3;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+.toggle-group {
+    display: flex;
+    align-items: center;
+}
+        .toggle-group label {
+            margin-right: 10px; /* Adjust the margin as needed */
+        }
+
+.separator {
+    border-top: 1px solid #ddd;
+    margin: 20px 0;
+}
+
+/* Additional styles for textarea */
+textarea {
+    width: 98%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    resize: vertical;
+    word-wrap: break-word;
+    margin-bottom: 10px;
+}
+
+.submitButton {
+    background-color: #3498DB;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: "Noto Naskh Arabic", Arial, sans-serif;
+}
+
+.submitButton:hover {
+    background-color: #217dbb;
+}
+#botTokenInput {
+    width: 50%;
+    height: 25px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
     </style>
 </head>
 <body>
@@ -121,6 +222,8 @@
             <a href="#System" class="menu" onclick="showContent('System')">سیستم</a>
             <a href="#NewConfig" class="menu" onclick="showContent('NewConfig')">وارد کردن کانفیگ جدید</a>
             <a href="#UploadFile" class="menu" onclick="showContent('UploadFile')">آپلود فایل راهنما</a>
+            <a href="#Bot-Setting" class="menu" onclick="showContent('Bot-Setting')">تنظیمات ربات</a>
+            <a href="#Bot-SendMessage" class="menu" onclick="showContent('Bot-SendMessage')">ارسال پیام به کاربران ربات</a>
             <a href="#Setting" class="menu" onclick="showContent('Setting')">تنظیمات پنل مدیر</a>
             <a href="#Logout" class="menu" onclick="showContent('Logout')">خروج</a>
         </div>
@@ -136,6 +239,20 @@
     var swapUsage = {{.SwapUsage}};
     var diskUsage = {{.DiskUsage}};
         function showContent(menu) {
+
+
+    // Remove "active" class from all menu items
+    const menuItems = document.querySelectorAll('.menu');
+    menuItems.forEach(item => item.classList.remove('active'));
+
+    // Show the content for the selected menu
+    // (Add your existing logic for showing content here)
+
+    // Add "active" class to the clicked menu item
+    const clickedMenuItem = document.querySelector(`.menu[href="#${menu}"]`);
+    clickedMenuItem.classList.add('active');
+
+
             var content = document.getElementById("main-content");
             content.innerHTML = "";
             if (menu === "System") {
@@ -204,113 +321,214 @@
     `;
     document.head.appendChild(style);
            } else if (menu === "UploadFile") {
-    content.innerHTML = `
-        <h1>آپلود فایل در سرور</h1>
-        <p>لطفا از این قسمت فایل راهنمای خود را با فرمت pdf در سرور آپلود نمایید.</p>
-        <p>همچنین از این قسمت برای آپلود هرگونه فایل بر روی سرور می توانید استفاده نمایید.</p>
-        <form id="uploadForm" enctype="multipart/form-data" onsubmit="uploadFile(); return false;">
-            <div class="form-group">
-                <label for="fileInput">انتخاب فایل:</label>
-                <input type="file" id="fileInput" class="inputField" accept=".pdf, .doc, .docx" required>
-            </div>
+ 		content.innerHTML = `
+ 		       <h1>آپلود فایل در سرور</h1>
+		        <p>لطفا از این قسمت فایل راهنمای خود را با فرمت pdf در سرور آپلود نمایید.</p>
+		        <p>همچنین از این قسمت برای آپلود هرگونه فایل بر روی سرور می توانید استفاده نمایید.</p>
+		        <form id="uploadForm" enctype="multipart/form-data" onsubmit="uploadFile(); return false;">
+		            <div class="form-group">
+		                <label for="fileInput">انتخاب فایل:</label>
+		                <input type="file" id="fileInput" class="inputField" accept=".pdf, .doc, .docx" required>
+		            </div>
 
-            <button type="submit" class="submitButton">آپلود فایل</button>
-        </form>`;
+		            <button type="submit" class="submitButton">آپلود فایل</button>
+		        </form>`;
     
-    // Add the following CSS style for the enhanced form appearance
-    const style = document.createElement('style');
-    style.innerHTML = `
-        .inputField {
-            width: 98%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .submitButton {
-            background-color: #3498DB;
-            color: #fff;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: "Noto Naskh Arabic", Arial, sans-serif;
-        }
-        .submitButton:hover {
-            background-color: #217dbb;
-        }
-    `;
-    document.head.appendChild(style);
+		    // Add the following CSS style for the enhanced form appearance
+		    const style = document.createElement('style');
+		    style.innerHTML = `
+		        .inputField {
+		            width: 98%;
+		            padding: 10px;
+		            border: 1px solid #ccc;
+		            border-radius: 5px;
+		        }
+		        .submitButton {
+		            background-color: #3498DB;
+		            color: #fff;
+		            padding: 10px 20px;
+		            border: none;
+		            border-radius: 5px;
+		            cursor: pointer;
+		            font-family: "Noto Naskh Arabic", Arial, sans-serif;
+		        }
+		        .submitButton:hover {
+		            background-color: #217dbb;
+		        }
+		    `;
+		    document.head.appendChild(style);
                 
+           } else if (menu === "Bot-Setting") {
+		initializePage();
+		    content.innerHTML = `
+		        <h1>تنظیمات ربات تلگرام</h1>
+		        <label for="botTokenInput">لطفا توکن ربات تلگرام خودتان را وارد نمایید:</label>
+		        <input type="text" id="botTokenInput" placeholder="توکن ربات تلگرام را وارد نمایید">
+		        <button onclick="submitBotToken()">ثبت توکن ربات</button>
+                        <hr class="separator">
+			<div class="form-group toggle-group">
+		            <label for="botToggle">فعال کردن/غیرفعال کردن ربات:</label>
+		            <div class="toggle-group">
+		                <label class="switch">
+		                    <input type="checkbox" id="botToggle" onchange="toggleBot()">
+		                    <span class="slider"></span>
+		                </label>
+		            </div>
+		        </div>
+		        <div id="botSettings" style="display: none;">
+		            <hr class="separator"> <!-- Separator between toggle button and text areas -->
+		            <form id="botSettingsForm" onsubmit="submitBotSettings(); return false;">
+		                <div class="form-group">
+		                    <label for="text1">متن پیام خوش آمد گویی به ربات:</label>
+		                    <textarea id="text1" rows="4" cols="50" disabled></textarea>
+		                </div>
+		                <div class="form-group">
+		                    <label for="text2">متن پیام بخش کاربری:</label>
+		                    <textarea id="text2" rows="4" cols="50" disabled></textarea>
+		                </div>
+		                <div class="form-group">
+		                    <label for="text3">متن 3:</label>
+		                    <textarea id="text3" rows="4" cols="50" disabled></textarea>
+		                </div>
+		                <div class="form-group">
+		                    <label for="text4">متن 4:</label>
+		                    <textarea id="text4" rows="4" cols="50" disabled></textarea>
+		                </div>
+		                <button type="submit" class="submitButton">ذخیره تغییرات</button>
+		            </form>
+		        </div>
+		    `;
+           } else if (menu === "Bot-SendMessage") {
+		    content.innerHTML = `
+        <style>
+            h1 {
+                font-family: "Noto Naskh Arabic", sans-serif;
+                /* Add other styling properties if needed */
+            }
+
+            textarea {
+                font-family: "Noto Naskh Arabic", sans-serif;
+                /* Add other styling properties if needed */
+            }
+
+            button {
+                font-family: "Noto Naskh Arabic", sans-serif;
+                /* Add other styling properties if needed */
+            }
+        </style>
+		        <h1>ارسال پیام به کاربران فعال ربات تلگرام</h1>
+		        <textarea id="messageInput" placeholder="متن پیام را وارد کنید"></textarea>
+		        <button onclick="sendMessage()">ارسال پیام</button>
+		    `;
+		    content.classList.add("send-message-section");
            } else if (menu === "Setting") {
-    content.innerHTML = `
-        <h1>تنظیمات حساب کاربری مدیر</h1>
-        <form id="settingsForm" onsubmit="updateSettings(); return false;">
-            <div class="form-group">
-                <label for="oldUsername">نام کاربری قبلی:</label>
-                <input type="text" id="oldUsername" class="inputField" required>
-            </div>
+	    content.innerHTML = `
+	        <h1>تنظیمات حساب کاربری مدیر</h1>
+	        <form id="settingsForm" onsubmit="updateSettings(); return false;">
+	            <div class="form-group">
+	                <label for="oldUsername">نام کاربری قبلی:</label>
+	                <input type="text" id="oldUsername" class="inputField" required>
+	            </div>
+	
+	            <div class="form-group">
+	                <label for="newUsername">نام کاربری جدید:</label>
+	                <input type="text" id="newUsername" class="inputField" required>
+	            </div>
+	
+	            <hr class="separator"> <!-- Separator between username and password -->
+	
+	            <div class="form-group">
+	                <label for="oldPassword">رمز عبور قبلی:</label>
+	                <input type="password" id="oldPassword" class="inputField" required>
+	            </div>
+	
+	            <div class="form-group">
+	                <label for="newPassword">رمز عبور جدید:</label>
+	                <input type="password" id="newPassword" class="inputField" required>
+	            </div>
+	
+	            <div class="form-group">
+	                <label for="confirmPassword">تکرار رمز عبور جدید:</label>
+	                <input type="password" id="confirmPassword" class="inputField" required>
+	            </div>
 
-            <div class="form-group">
-                <label for="newUsername">نام کاربری جدید:</label>
-                <input type="text" id="newUsername" class="inputField" required>
-            </div>
+	            <button type="submit" class="submitButton">ذخیره تغییرات</button>
+	        </form>`;
 
-            <hr class="separator"> <!-- Separator between username and password -->
-
-            <div class="form-group">
-                <label for="oldPassword">رمز عبور قبلی:</label>
-                <input type="password" id="oldPassword" class="inputField" required>
-            </div>
-
-            <div class="form-group">
-                <label for="newPassword">رمز عبور جدید:</label>
-                <input type="password" id="newPassword" class="inputField" required>
-            </div>
-
-            <div class="form-group">
-                <label for="confirmPassword">تکرار رمز عبور جدید:</label>
-                <input type="password" id="confirmPassword" class="inputField" required>
-            </div>
-
-            <button type="submit" class="submitButton">ذخیره تغییرات</button>
-        </form>`;
-
-    // Add the following CSS style for the enhanced form appearance
-    const style = document.createElement('style');
-    style.innerHTML = `
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .inputField {
-            width: 98%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .separator {
-            border-top: 1px solid #ddd;
-            margin: 20px 0;
-        }
-        .submitButton {
-            background-color: #3498DB;
-            color: #fff;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: "Noto Naskh Arabic", Arial, sans-serif;
-        }
-        .submitButton:hover {
-            background-color: #217dbb;
-        }
-    `;
-    document.head.appendChild(style);
+	    // Add the following CSS style for the enhanced form appearance
+	    const style = document.createElement('style');
+	    style.innerHTML = `
+	        .form-group {
+	            margin-bottom: 20px;
+	        }
+	        .inputField {
+	            width: 98%;
+	            padding: 10px;
+	            border: 1px solid #ccc;
+	            border-radius: 5px;
+	        }
+	        .separator {
+	            border-top: 1px solid #ddd;
+	            margin: 20px 0;
+	        }
+	        .submitButton {
+	            background-color: #3498DB;
+	            color: #fff;
+	            padding: 10px 20px;
+	            border: none;
+	            border-radius: 5px;
+	            cursor: pointer;
+	            font-family: "Noto Naskh Arabic", Arial, sans-serif;
+	        }
+	        .submitButton:hover {
+	            background-color: #217dbb;
+	        }
+	    `;
+	    document.head.appendChild(style);
            } else if (menu === "Logout") {
             	window.location.href = "/logout";
             }
         }
     </script>
-	<script>
+        <script>
+async function initializePage() {
+    // Get initial toggle state
+    initialToggleState = await getInitialToggleState();
+
+    // Set the initial state for the toggle switch if the element exists
+    var botToggle = document.getElementById("botToggle");
+    if (botToggle) {
+        botToggle.checked = initialToggleState;
+    } else {
+        console.error('Element with ID "botToggle" not found.');
+    }
+
+    var botSettings = document.getElementById("botSettings");
+    var textAreas = document.querySelectorAll("#botSettings textarea");
+    var submitButton = document.querySelector("#botSettingsForm button[type='submit']");
+
+    if (botToggle.checked) {
+        botSettings.style.display = "block";
+        textAreas.forEach(function(area) {
+            area.disabled = false;
+        });
+        submitButton.disabled = false;
+        // Call getInitialTextState() after setting submitButton.disabled to false
+        const initialTextState = await getInitialTextState();
+
+        // Set values to textboxes
+        document.getElementById("text1").value = initialTextState.welcome_logged_in;
+        document.getElementById("text2").value = initialTextState.welcome_not_logged_in;
+        document.getElementById("text3").value = initialTextState.news_message;
+        document.getElementById("text4").value = initialTextState.text4;
+    } else {
+        botSettings.style.display = "none";
+        textAreas.forEach(function(area) {
+            area.disabled = true;
+        });
+        submitButton.disabled = true;
+    }
+}
 	    // Assign Go variables to JavaScript variables
 	    var cpuUsage = {{.CpuUsage}};
 	    var ramUsage = {{.RamUsage}};
@@ -533,6 +751,177 @@
             }
         });
     }    
+
+
+async function submitBotSettings() {
+    // Get text values from text areas
+    var text1 = document.getElementById("text1").value;
+    var text2 = document.getElementById("text2").value;
+    var text3 = document.getElementById("text3").value;
+    var text4 = document.getElementById("text4").value;
+
+    // Create an object to store text values
+    var textValues = {
+        welcome_not_logged_in: text1,
+        welcome_logged_in: text2,
+        news_message: text3,
+        text4: text4
+    };
+
+    // Send the updated text values to the server
+    await sendTexts(textValues);
+
+    // Add any additional logic or alerts as needed
+    alert('Text values submitted successfully!');
+}
+
+// Function to get the initial toggle state from the server
+async function getInitialToggleState() {
+    try {
+        const response = await fetch('/get-initial-toggle-state');
+        const data = await response.json();
+        return data.initialToggleState;
+    } catch (error) {
+        console.error('Error fetching initial toggle state:', error);
+        return false;
+    }
+}
+
+// Function to get the initial text state from the server
+async function getInitialTextState() {
+    try {
+        const response = await fetch('/get-initial-text-state');
+        const data = await response.json();
+        return data.initialTextState;
+    } catch (error) {
+        console.error('Error fetching initial text state:', error);
+        return {};
+    }
+}
+
+// Function to send the updated toggle state to the server
+async function sendToggleState(newToggleState) {
+    try {
+        const response = await fetch('/send-toggle-state', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ newToggleState }),
+        });
+
+        if (!response.ok) {
+            console.error('Failed to send toggle state to server');
+        }
+    } catch (error) {
+        console.error('Error sending toggle state to server:', error);
+    }
+}
+
+async function sendTexts(textValues) {
+    try {
+        const response = await fetch('/send-texts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ textValues }),
+        });
+    } catch (error) {
+        console.error('Error sending text values to server:', error);
+    }
+}
+
+async function toggleBot() {
+    var botToggle = document.getElementById("botToggle");
+    var botSettings = document.getElementById("botSettings");
+    var textAreas = document.querySelectorAll("#botSettings textarea");
+    var submitButton = document.querySelector("#botSettingsForm button[type='submit']");
+
+    if (botToggle.checked) {
+        botSettings.style.display = "block";
+        textAreas.forEach(function(area) {
+            area.disabled = false;
+        });
+        submitButton.disabled = false;
+        // Call getInitialTextState() after setting submitButton.disabled to false
+        const initialTextState = await getInitialTextState();
+
+        // Set values to textboxes
+        document.getElementById("text1").value = initialTextState.welcome_logged_in;
+        document.getElementById("text2").value = initialTextState.welcome_not_logged_in;
+        document.getElementById("text3").value = initialTextState.news_message;
+        document.getElementById("text4").value = initialTextState.text4;
+
+    } else {
+        botSettings.style.display = "none";
+        textAreas.forEach(function(area) {
+            area.disabled = true;
+        });
+        submitButton.disabled = true;
+    }
+
+    sendToggleState(botToggle.checked);
+
+    if (botToggle.checked) {
+        alert('Telegram bot started!');
+    } else {
+        alert('Telegram bot stopped!');
+    }
+}
+
+async function sendMessage() {
+    const messageInput = document.getElementById("messageInput");
+    const message = messageInput.value;
+
+    // Validate message if needed
+
+    // Call the server function to send the message
+    try {
+        const response = await fetch('/send-message', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message }),
+        });
+
+        if (response.ok) {
+            console.log('Message successfully sent to the server.');
+            // Perform any additional actions or update UI as needed
+        } else {
+            console.error('Failed to send message to server. Server responded with:', response.status, response.statusText);
+        }
+    } catch (error) {
+        console.error('Error sending message to server:', error);
+    }
+}
+
+function submitBotToken() {
+    const botToken = document.getElementById('botTokenInput').value;
+    sendBotToken(botToken);
+}
+
+async function sendBotToken(botToken) {
+    try {
+        const response = await fetch('/send-bot-token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ botToken }),
+        });
+
+        if (response.ok) {
+            console.log('Telegram bot token successfully sent to the server.');
+        } else {
+            console.error('Failed to send Telegram bot token to server. Server responded with:', response.status, response.statusText);
+        }
+    } catch (error) {
+        console.error('Error sending Telegram bot token to server:', error);
+    }
+}
+
 
 	</script>
 </body>
