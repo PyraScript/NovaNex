@@ -128,9 +128,37 @@ EOL
     sudo systemctl start web_panel.service
     sudo systemctl enable web_panel.service
 
-    cd /usr/local/web_panel/telegrambot
-    go mod init tel_bot
-    go mod tidy
+cd /usr/local/web_panel/telegrambot
+
+# Initialize a new Go module for the telegrambot
+go mod init tel_bot
+go mod tidy
+
+# Build the Go program for the telegrambot
+go build -o telegrambot . > telegrambot_output.out 2>&1
+
+# Create a systemd service file for the telegrambot
+sudo tee /etc/systemd/system/telegrambot.service > /dev/null <<EOL
+[Unit]
+Description=Telegram Bot Service
+After=network.target
+
+[Service]
+User=root
+ExecStart=/usr/local/web_panel/telegrambot/telegrambot
+WorkingDirectory=/usr/local/web_panel/telegrambot
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target
+EOL
+
+# Reload systemd
+sudo systemctl daemon-reload
+
+echo -e "${GREEN}Telegram Bot service created.${NC}"
 
     echo -e "${GREEN}Go and web panel installed. Service created.${NC}"
 }
