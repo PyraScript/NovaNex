@@ -67,6 +67,18 @@ sqlite3 NovaNex.db <<'EOF'
 CREATE TABLE IF NOT EXISTS `client_traffics` (`id` integer PRIMARY KEY AUTOINCREMENT,`inbound_id` integer,`enable` numeric,`email` text UNIQUE,`up` integer,`down` integer,`expiry_time` integer,`total` integer,`reset` integer DEFAULT 0,CONSTRAINT `fk_inbounds_client_stats` FOREIGN KEY (`inbound_id`) REFERENCES `inbounds`(`id`));
 EOF
 
+sqlite3 NovaNex.db <<'EOF'
+CREATE TABLE IF NOT EXISTS texts_table (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    key TEXT UNIQUE,
+    text TEXT
+);
+INSERT INTO texts_table (key, text) VALUES
+    ('welcome_logged_in', 'به %s خوش آمدید!'),
+    ('welcome_not_logged_in', 'درود👋\nبه %s خوش آمدید!'),
+    ('news_message', 'Hello, dear users! This is an important announcement.');
+EOF
+
 snap install bcrypt-tool
 
 # Generate random username and password
