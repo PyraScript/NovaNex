@@ -131,7 +131,7 @@ EOL
 cd /usr/local/web_panel/telegrambot
 
 # Initialize a new Go module for the telegrambot
-go mod init tel_bot
+go mod init telegrambot
 go mod tidy
 
 # Build the Go program for the telegrambot
