@@ -28,6 +28,7 @@ import (
         "encoding/json"
         "io"
         "path/filepath"
+//	"web_panel/telegrambot"
 )
 
 // User represents a user with username and password.
@@ -103,6 +104,8 @@ func init() {
 
     // Set up the logger to write to the file
     logger = log.New(file, "APP: ", log.Ldate|log.Ltime|log.Lshortfile)
+    initBotService()
+
 }
 
 func main() {
@@ -118,6 +121,12 @@ func main() {
         }
         defer db.Close()
 
+    // Your news message
+//    newsMessage := "Hello, dear users! This is an important announcement."
+
+    // Send news to logged-in users
+//    telegrambot.sendNewsToLoggedInUsers(bot, newsMessage)
+
 
 	// Handle requests
 	http.Handle("/login", http.HandlerFunc(loginHandler))
@@ -126,6 +135,12 @@ func main() {
         http.HandleFunc("/send-config", sendConfigHandler)
         http.HandleFunc("/upload-file", uploadFileHandler)
         http.HandleFunc("/update-settings", settingsHandler)
+	http.HandleFunc("/get-initial-toggle-state", getInitialToggleStateHandler)
+	http.HandleFunc("/get-initial-text-state", getInitialTextStateHandler)
+	http.HandleFunc("/send-toggle-state", updateToggleStateHandler)
+	http.HandleFunc("/send-texts", updateTextValuesHandler)
+	http.HandleFunc("/send-message", sendMessageHandler)
+	http.HandleFunc("/send-bot-token", sendBotTokenHandler)
 
 	// Serve static files (including login.html and panel.html)
 	http.Handle("/", logRequest(http.FileServer(http.Dir("templates"))))
@@ -1221,4 +1236,305 @@ func updateSessionUsername(token string, newUsername string) {
             return
         }
     }
+}
+
+
+
+
+
+
+
+
+
+func getInitialToggleStateHandler(w http.ResponseWriter, r *http.Request) {
+	// Open the database connection
+	db, err := sql.Open("sqlite3", "/usr/local/web_panel/NovaNex.db")
+	if err != nil {
+		// Handle error (return an appropriate HTTP response, log, etc.)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	// Query the database to get the initial toggle state
+	query := "SELECT text FROM texts_table WHERE key = 'bot_status'"
+	row := db.QueryRow(query)
+
+	var initialToggleState bool
+	err = row.Scan(&initialToggleState)
+	if err != nil {
+		// Handle error (return an appropriate HTTP response, log, etc.)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+    jsonResponse := map[string]bool{"initialToggleState": initialToggleState}
+    sendJSONResponse(w, jsonResponse)
+}
+
+func sendJSONResponse(w http.ResponseWriter, data interface{}) {
+    w.Header().Set("Content-Type", "application/json")
+
+    // Marshal data to JSON
+    jsonData, err := json.Marshal(data)
+    if err != nil {
+        fmt.Println("Error marshaling JSON:", err)
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+        return
+    }
+
+    w.WriteHeader(http.StatusOK)
+
+    // Write JSON response
+    _, err = w.Write(jsonData)
+    if err != nil {
+        fmt.Println("Error writing JSON response:", err)
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+    }
+}
+
+
+func getInitialTextStateHandler(w http.ResponseWriter, r *http.Request) {
+	// Open the database connection
+	db, err := sql.Open("sqlite3", "/usr/local/web_panel/NovaNex.db")
+	if err != nil {
+		// Handle error (return an appropriate HTTP response, log, etc.)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	// Define the keys you want to retrieve
+	keys := []string{"welcome_not_logged_in", "welcome_logged_in", "news_message", "text4"}
+
+	// Fetch the initial text state from the database
+	initialTextState := make(map[string]string)
+	for _, key := range keys {
+		query := "SELECT text FROM texts_table WHERE key = ?"
+		row := db.QueryRow(query, key)
+
+		var value string
+		err := row.Scan(&value)
+		if err != nil {
+			value = "Default " + key
+		}
+
+		initialTextState[key] = value
+	}
+
+    // Return the initial text state as JSON
+    jsonResponse := map[string]map[string]string{"initialTextState": initialTextState}
+    sendJSONResponse(w, jsonResponse)
+}
+
+func updateToggleStateHandler(w http.ResponseWriter, r *http.Request) {
+    // Parse JSON request
+    var requestData map[string]bool
+    err := json.NewDecoder(r.Body).Decode(&requestData)
+    if err != nil {
+        http.Error(w, "Bad Request", http.StatusBadRequest)
+        return
+    }
+
+	// Open the database connection
+	db, err := sql.Open("sqlite3", "/usr/local/web_panel/NovaNex.db")
+	if err != nil {
+		// Handle error (return an appropriate HTTP response, log, etc.)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+    // Update the toggle state in your data source (e.g., database)
+    newToggleState := requestData["newToggleState"]
+
+	query := "UPDATE texts_table SET text = ? WHERE key = 'bot_status'"
+	_, err = db.Exec(query, newToggleState)
+	if err != nil {
+		// Handle error (return an appropriate HTTP response, log, etc.)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if (newToggleState) {
+		// Start the telegrambot.service using systemctl
+		cmd := exec.Command("systemctl", "start", "telegrambot.service")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		
+		err := cmd.Run()
+		if err != nil {
+			// Handle error (log, panic, etc.)
+			fmt.Println("Error starting telegrambot.service:", err)
+			return
+		}
+	} else {
+		// Start the telegrambot.service using systemctl
+		cmd := exec.Command("systemctl", "stop", "telegrambot.service")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		
+		err := cmd.Run()
+		if err != nil {
+			// Handle error (log, panic, etc.)
+			fmt.Println("Error starting telegrambot.service:", err)
+			return
+		}
+	}
+
+    // Respond with success
+    sendJSONResponse(w, map[string]string{"status": "success"})
+}
+
+type TextValuesRequest struct {
+    TextValues map[string]string `json:"textValues"`
+}
+
+func updateTextValuesHandler(w http.ResponseWriter, r *http.Request) {
+    // Parse JSON request
+    var requestData TextValuesRequest
+    err := json.NewDecoder(r.Body).Decode(&requestData)
+
+    if err != nil {
+        fmt.Println("Error decoding JSON:", err)
+        http.Error(w, "Bad Request", http.StatusBadRequest)
+        return
+    }
+
+    // Ensure the expected keys are present in the request payload
+    requiredKeys := []string{"welcome_not_logged_in", "welcome_logged_in", "news_message", "text4"}
+    for _, key := range requiredKeys {
+        if _, ok := requestData.TextValues[key]; !ok {
+            fmt.Println("Missing key in request payload:", key)
+            http.Error(w, "Bad Request: Missing required key", http.StatusBadRequest)
+            return
+        }
+    }
+
+	// Open the database connection
+	db, err := sql.Open("sqlite3", "/usr/local/web_panel/NovaNex.db")
+	if err != nil {
+		// Handle error (return an appropriate HTTP response, log, etc.)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	// Update text values in the database
+	for key, value := range requestData.TextValues {
+		query := "UPDATE texts_table SET text = ? WHERE key = ?"
+		_, err = db.Exec(query, value, key)
+		if err != nil {
+			// Handle error (return an appropriate HTTP response, log, etc.)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+    // Respond with success
+    sendJSONResponse(w, map[string]string{"status": "success"})
+}
+
+type MessageRequest struct {
+    Message string `json:"message"`
+}
+
+func sendMessageHandler(w http.ResponseWriter, r *http.Request) {
+    // Parse JSON request
+    var requestData MessageRequest
+    err := json.NewDecoder(r.Body).Decode(&requestData)
+
+    if err != nil {
+        fmt.Println("Error decoding JSON:", err)
+        http.Error(w, "Bad Request", http.StatusBadRequest)
+        return
+    }
+
+    // Validate or process the received message as needed
+
+    // Respond with success
+    sendJSONResponse(w, map[string]string{"status": "success"})
+}
+
+func sendBotTokenHandler(w http.ResponseWriter, r *http.Request) {
+    // Parse JSON request
+    var requestData map[string]string
+    err := json.NewDecoder(r.Body).Decode(&requestData)
+
+    if err != nil {
+        fmt.Println("Error decoding JSON:", err)
+        http.Error(w, "Bad Request", http.StatusBadRequest)
+        return
+    }
+
+    // Ensure the expected key is present in the request payload
+    if botToken, ok := requestData["botToken"]; ok {
+	// Store the bot token in the specified file
+	err := storeBotTokenInFile(botToken)
+	if err != nil {
+		// Handle error (return an appropriate HTTP response, log, etc.)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+        // Respond with success
+        sendJSONResponse(w, map[string]string{"status": "success"})
+    } else {
+        fmt.Println("Missing key in request payload: botToken")
+        http.Error(w, "Bad Request: Missing required key 'botToken'", http.StatusBadRequest)
+    }
+}
+
+func storeBotTokenInFile(botToken string) error {
+	// Open or create the file
+	file, err := os.OpenFile("/usr/local/web_panel/telegrambot/config.env", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Write the bot token to the file
+	_, err = file.WriteString(fmt.Sprintf("TELEGRAM_BOT_TOKEN=%s\n", botToken))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func initBotService() {
+	// Open the database connection
+	db, err := sql.Open("sqlite3", "/usr/local/web_panel/NovaNex.db")
+	if err != nil {
+		// Handle error (log, panic, etc.)
+		fmt.Println("Error opening database:", err)
+		return
+	}
+	defer db.Close()
+
+	// Query the database to get the current bot status
+	query := "SELECT text FROM texts_table WHERE key = 'bot_status'"
+	row := db.QueryRow(query)
+
+	var botStatus bool
+	err = row.Scan(&botStatus)
+	if err != nil {
+		// Handle error (log, panic, etc.)
+		fmt.Println("Error querying database:", err)
+		return
+	}
+
+	// Start the bot service if bot status is true
+	if botStatus {
+		// Start the telegrambot.service using systemctl
+		cmd := exec.Command("systemctl", "start", "telegrambot.service")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		err := cmd.Run()
+		if err != nil {
+			// Handle error (log, panic, etc.)
+			fmt.Println("Error starting telegrambot.service:", err)
+			return
+		}
+	}
 }
