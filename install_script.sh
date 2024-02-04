@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS texts_table (
 INSERT INTO texts_table (key, text) VALUES
     ('welcome_logged_in', 'به %s خوش آمدید!'),
     ('welcome_not_logged_in', 'درود👋\nبه %s خوش آمدید!'),
-    ('news_message', 'Hello, dear users! This is an important announcement.'),
+    ('servers', 'درحال حاضر سرور های زیر موجود هستند:'),
     ('bot_status', 'false');
 EOF
 
