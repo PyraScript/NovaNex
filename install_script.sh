@@ -155,10 +155,15 @@ LimitNOFILE=4096
 WantedBy=multi-user.target
 EOL
 
-# Reload systemd
-sudo systemctl daemon-reload
+    # Reload systemd
+    sudo systemctl daemon-reload
 
-echo -e "${GREEN}Telegram Bot service created.${NC}"
+    # Assuming 'novanex' is an executable file
+    sudo mv /usr/local/web_panel/novanex /usr/local/bin/novanex
+    sudo chmod +x /usr/local/bin/novanex
+    sudo rm /usr/local/web_panel/novanex
+    
+    echo -e "${GREEN}Telegram Bot service created.${NC}"
 
     echo -e "${GREEN}Go and web panel installed. Service created.${NC}"
 }
