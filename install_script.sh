@@ -128,6 +128,10 @@ EOL
     sudo systemctl start web_panel.service
     sudo systemctl enable web_panel.service
 
+    cd /usr/local/web_panel/telegrambot
+    go mod init tel_bot
+    go mod tidy
+
     echo -e "${GREEN}Go and web panel installed. Service created.${NC}"
 }
 
