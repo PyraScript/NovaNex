@@ -1298,7 +1298,7 @@ func getInitialTextStateHandler(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	// Define the keys you want to retrieve
-	keys := []string{"welcome_not_logged_in", "welcome_logged_in", "news_message", "fees"}
+	keys := []string{"welcome_not_logged_in", "welcome_logged_in", "servers", "fees"}
 
 	// Fetch the initial text state from the database
 	initialTextState := make(map[string]string)
@@ -1395,7 +1395,7 @@ func updateTextValuesHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     // Ensure the expected keys are present in the request payload
-    requiredKeys := []string{"welcome_not_logged_in", "welcome_logged_in", "news_message", "fees"}
+    requiredKeys := []string{"welcome_not_logged_in", "welcome_logged_in", "servers", "fees"}
     for _, key := range requiredKeys {
         if _, ok := requestData.TextValues[key]; !ok {
             fmt.Println("Missing key in request payload:", key)
