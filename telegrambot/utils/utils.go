@@ -42,7 +42,7 @@ func init() {
     if botToken == "" {
         log.Fatal("Telegram bot token is not set. Please set the TELEGRAM_BOT_TOKEN environment variable.")
     }
-    loadTexts()
+    LoadTexts()
 }
 
 func UserLogin(email, id string, userID int) bool {
@@ -776,7 +776,7 @@ func ShowMenuUpdate(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 }
 
 
-func loadTexts() {
+func LoadTexts() {
     // Connect to the database
     db, err := sql.Open("sqlite3", "/usr/local/web_panel/NovaNex.db")
     if err != nil {
