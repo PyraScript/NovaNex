@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/joho/godotenv"
-	"telegrambot/utils"
+	"web_panel/telegrambot/utils"
         "log"
         "os"
 	"strings"
