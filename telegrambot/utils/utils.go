@@ -236,6 +236,8 @@ func handleLoggedInCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message) stri
             tgbotapi.NewInlineKeyboardButtonData("کانفیگ جدید", "/newconfig"),
         ),
         tgbotapi.NewInlineKeyboardRow(
+            tgbotapi.NewInlineKeyboardButtonData("تعرفه سرویس ها", "/fee"),
+            tgbotapi.NewInlineKeyboardButtonData("سرور ها", "/servers"),
             tgbotapi.NewInlineKeyboardButtonData("راهنما", "/guide"),
         ),
         tgbotapi.NewInlineKeyboardRow(
@@ -268,6 +270,7 @@ func handleNotLoggedInCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message) s
             tgbotapi.NewInlineKeyboardButtonData("🛍️ خرید کانفیگ", "/buyconfig"),
         ),
         tgbotapi.NewInlineKeyboardRow(
+            tgbotapi.NewInlineKeyboardButtonData("تعرفه سرویس ها", "/fee"),
             tgbotapi.NewInlineKeyboardButtonData("سرویس های موجود", "/servers"),
         ),
     )
@@ -708,9 +711,12 @@ func HandleInlineButtonPress(bot *tgbotapi.BotAPI, message *tgbotapi.Message, ca
         // Handle the "/buyconfig" button press
         response := "You pressed the /buyconfig button!"
         SendMessage(bot, message.Chat.ID, response)
+    case "/fee":
+        response := welcomeTexts["fees"]
+        SendMessage(bot, message.Chat.ID, response)
     case "/servers":
         // Handle the "/buyconfig" button press
-        response := "در حال حاضر سرور های زیر موجود هستند:\n"+"آلمان 🇩🇪\n"
+        response := welcomeTexts["servers"]
         SendMessage(bot, message.Chat.ID, response)
 
     }
