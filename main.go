@@ -28,7 +28,8 @@ import (
         "encoding/json"
         "io"
         "path/filepath"
-//	"web_panel/telegrambot"
+        "web_panel/telegrambot/utils"
+
 )
 
 // User represents a user with username and password.
@@ -120,13 +121,6 @@ func main() {
             log.Fatal(err)
         }
         defer db.Close()
-
-    // Your news message
-//    newsMessage := "Hello, dear users! This is an important announcement."
-
-    // Send news to logged-in users
-//    telegrambot.sendNewsToLoggedInUsers(bot, newsMessage)
-
 
 	// Handle requests
 	http.Handle("/login", http.HandlerFunc(loginHandler))
@@ -1449,7 +1443,7 @@ func sendMessageHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Validate or process the received message as needed
+    utils.SendNewsFromMain(requestData.Message)
 
     // Respond with success
     sendJSONResponse(w, map[string]string{"status": "success"})
