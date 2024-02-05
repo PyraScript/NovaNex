@@ -364,7 +364,7 @@ textarea {
 		        <h1>تنظیمات ربات تلگرام</h1>
 		        <label for="botTokenInput">لطفا توکن ربات تلگرام خودتان را وارد نمایید:</label>
 		        <input type="text" id="botTokenInput" placeholder="توکن ربات تلگرام را وارد نمایید">
-		        <button onclick="submitBotToken()">ثبت توکن ربات</button>
+		        <button class="submitButton" onclick="submitBotToken()">ثبت توکن ربات</button>
                         <hr class="separator">
 			<div class="form-group toggle-group">
 		            <label for="botToggle">فعال کردن/غیرفعال کردن ربات:</label>
@@ -418,7 +418,7 @@ textarea {
         </style>
 		        <h1>ارسال پیام به کاربران فعال ربات تلگرام</h1>
 		        <textarea id="messageInput" placeholder="متن پیام را وارد کنید"></textarea>
-		        <button onclick="sendMessage()">ارسال پیام</button>
+		        <button class="submitButton" onclick="sendMessage()">ارسال پیام</button>
 		    `;
 		    content.classList.add("send-message-section");
            } else if (menu === "Setting") {
