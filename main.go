@@ -1423,7 +1423,7 @@ func updateTextValuesHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
+	utils.LoadText()
     // Respond with success
     sendJSONResponse(w, map[string]string{"status": "success"})
 }
