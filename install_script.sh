@@ -77,6 +77,7 @@ INSERT INTO texts_table (key, text) VALUES
     ('welcome_logged_in', 'به %s خوش آمدید!'),
     ('welcome_not_logged_in', 'درود👋\nبه %s خوش آمدید!'),
     ('servers', 'درحال حاضر سرور های زیر موجود هستند:'),
+    ('fees', 'در حال حاضر تعرفه سرویس ها به شرح زیر هست:'),
     ('bot_status', 'false');
 EOF
 
