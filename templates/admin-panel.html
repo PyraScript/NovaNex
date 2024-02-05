@@ -519,7 +519,7 @@ async function initializePage() {
         // Set values to textboxes
         document.getElementById("text1").value = initialTextState.welcome_logged_in;
         document.getElementById("text2").value = initialTextState.welcome_not_logged_in;
-        document.getElementById("text3").value = initialTextState.news_message;
+        document.getElementById("text3").value = initialTextState.servers;
         document.getElementById("text4").value = initialTextState.fees;
     } else {
         botSettings.style.display = "none";
@@ -764,7 +764,7 @@ async function submitBotSettings() {
     var textValues = {
         welcome_not_logged_in: text1,
         welcome_logged_in: text2,
-        news_message: text3,
+        servers: text3,
         fees: text4
     };
 
@@ -850,7 +850,7 @@ async function toggleBot() {
         // Set values to textboxes
         document.getElementById("text1").value = initialTextState.welcome_logged_in;
         document.getElementById("text2").value = initialTextState.welcome_not_logged_in;
-        document.getElementById("text3").value = initialTextState.news_message;
+        document.getElementById("text3").value = initialTextState.servers;
         document.getElementById("text4").value = initialTextState.fees;
 
     } else {
