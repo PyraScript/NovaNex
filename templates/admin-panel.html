@@ -520,7 +520,7 @@ async function initializePage() {
         document.getElementById("text1").value = initialTextState.welcome_logged_in;
         document.getElementById("text2").value = initialTextState.welcome_not_logged_in;
         document.getElementById("text3").value = initialTextState.news_message;
-        document.getElementById("text4").value = initialTextState.text4;
+        document.getElementById("text4").value = initialTextState.fees;
     } else {
         botSettings.style.display = "none";
         textAreas.forEach(function(area) {
@@ -765,7 +765,7 @@ async function submitBotSettings() {
         welcome_not_logged_in: text1,
         welcome_logged_in: text2,
         news_message: text3,
-        text4: text4
+        fees: text4
     };
 
     // Send the updated text values to the server
@@ -851,7 +851,7 @@ async function toggleBot() {
         document.getElementById("text1").value = initialTextState.welcome_logged_in;
         document.getElementById("text2").value = initialTextState.welcome_not_logged_in;
         document.getElementById("text3").value = initialTextState.news_message;
-        document.getElementById("text4").value = initialTextState.text4;
+        document.getElementById("text4").value = initialTextState.fees;
 
     } else {
         botSettings.style.display = "none";
