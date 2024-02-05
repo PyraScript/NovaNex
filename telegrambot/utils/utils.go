@@ -40,7 +40,7 @@ func init() {
     }
     botToken = os.Getenv("TELEGRAM_BOT_TOKEN")
     if botToken == "" {
-        log.Fatal("Telegram bot token is not set. Please set the TELEGRAM_BOT_TOKEN environment variable.")
+        log.Println("Telegram bot token is not set. Please set the TELEGRAM_BOT_TOKEN environment variable.")
     }
     LoadTexts()
 }
