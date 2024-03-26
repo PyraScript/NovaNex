@@ -58,10 +58,10 @@
         .menu:hover {
             background: #D5DBDB; /* Lighter silver background on hover */
         }
-.menu.active {
-    background-color: #5da5db; /* Change this to the desired color */
-    color: #ffffff; /* Change this to the desired text color */
-}
+	.menu.active {
+	    background-color: #5da5db; /* Change this to the desired color */
+	    color: #ffffff; /* Change this to the desired text color */
+	}
 
         .content {
             background: #ffffff; /* White main content background */
@@ -211,6 +211,93 @@ textarea {
     border: 1px solid #ccc;
     border-radius: 5px;
 }
+#botAdminIDInput {
+    width: 50%;
+    height: 25px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* The popup form - hidden by default */
+.form-popup {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 90%; 
+  max-height: 90%; 
+  overflow: auto; 
+  border: 2px solid #3498DB;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background-color: #FFFFFF;
+  z-index: 9;
+}
+
+/* Add styles to the form container */
+.form-container {
+  width: 100%; /* Set width to 100% */
+  height: 100%; /* Set height to 100% */
+  padding: 20px;
+  box-sizing: border-box; /* Include padding and border in element's total width and height */
+}
+
+/* Style form elements */
+.form-container input[type=text],
+.form-container input[type=password],
+.form-container select {
+  width: calc(100% - 20px); /* Subtract padding from width */
+  padding: 6px;
+  margin: 4px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+/* Style form labels */
+.form-container label {
+  margin-bottom: 10px;
+}
+
+/* Style form buttons */
+.form-container button {
+  width: calc(50% - 10px); /* Adjust button width */
+  background-color: #3498DB;
+  color: white;
+  padding: 7px 10px;
+  margin: 8px 2px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* Change button color on hover */
+.form-container button:hover {
+  background-color: #2980B9;
+}
+
+/* Clear floats after buttons */
+.form-container::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+/* Style the disabled textarea for displaying configuration */
+.config-textarea {
+  width: 90%;
+  height: 100px; /* Set desired height */
+  resize: vertical; /* Allow vertical resizing */
+}
+/* Style the input field for full configuration */
+#fullConfig {
+  width: 90%;
+  height: 100px; /* Set desired height */
+  margin-bottom: 10px;
+}
+
     </style>
 </head>
 <body>
@@ -244,9 +331,6 @@ textarea {
     // Remove "active" class from all menu items
     const menuItems = document.querySelectorAll('.menu');
     menuItems.forEach(item => item.classList.remove('active'));
-
-    // Show the content for the selected menu
-    // (Add your existing logic for showing content here)
 
     // Add "active" class to the clicked menu item
     const clickedMenuItem = document.querySelector(`.menu[href="#${menu}"]`);
@@ -288,12 +372,52 @@ textarea {
            } else if (menu === "NewConfig") {
     content.innerHTML = `
         <h1>بارگذاری کانفیگ جدید کاربران</h1>
+	<p>در صورتی که فایل کانفیگ شما آماده است از کادر موجود در این صفحه فایل را بارگذاری کنید. در غیر اینصورت می توانید از بخش ساخت کانفیگ، کانفیگ جدید خود را شخصی سازی کنید.</p>
+        <button onclick="openForm()" class="submitButton" style="width:100%;">ساخت کانفیگ</button>
+
+
+<!-- The popup form -->
+<div class="form-popup" id="myForm">
+
+  <form action="/action_page.php" class="form-container">
+    <h2>فرم شخصی سازی کانفیگ</h2>
+    <label for="sampleconfigTextArea">لطفا کانفیگ کامل خود را به عنوان نمونه وارد کنید:</label>
+    <textarea id="sampleconfigTextArea" class="config-textarea" placeholder="لطفا کانفیگ خود را در این محل وارد کنید" dir="ltr" ></textarea>
+
+    <h3>شما می توانید امکانات زیر را به کانفیگ خودتان اضافه کنید:</h3>
+
+    <!-- Fragment input -->
+    <!-- Checkbox for adding default fragment code -->
+    <label for="addDefaultFragment">افزودن فرگمنت پیش‌فرض:</label>
+    <input type="checkbox" id="addDefaultFragment" name="addDefaultFragment"></input><br>
+
+    <!-- Checkbox for enabling mux -->
+    <label for="enableMux">فعال کردن Mux:</label>
+    <input type="checkbox" id="enableMux" name="enableMux"><br>
+
+    <!-- Checkbox for adding user agent -->
+    <label for="addUserAgent">افزودن User Agent:</label>
+    <input type="checkbox" id="addUserAgent" name="addUserAgent"><br>
+
+    <br>
+    <!-- Button to edit and add new parts -->
+    <button type="button" onclick="editConfig()" style="width:100%;">ویرایش و اضافه کردن قسمت‌های جدید</button>
+
+    <hr> <!-- Add a horizontal line to separate inputs from the textarea -->
+    <label for="configTextAreaForm">کانفیگ نهایی:</label>
+    <textarea id="configTextAreaForm" class="config-textarea" dir="ltr" disabled></textarea> <!-- Add disabled textarea for displaying the configuration -->
+    <hr> <!-- Add another horizontal line -->
+
+    <button type="button" onclick="saveConfig()" >ذخیره</button>
+    <button type="button" onclick="closeForm()">لغو</button>
+  </form>
+</div>
+
         <form id="configForm" onsubmit="sendConfig(); return false;">
             <div class="form-group">
                 <label for="configTextarea">متن کانفیگ:</label>
-                <textarea id="configTextarea" class="inputField" rows="5" required></textarea>
+                <textarea id="configTextarea" class="inputField" dir="ltr" rows="5" required></textarea>
             </div>
-
             <button type="submit" class="submitButton">ارسال کانفیگ</button>
         </form>`;
 
@@ -376,6 +500,10 @@ textarea {
 		            </div>
 		        </div>
 		        <div id="botSettings" style="display: none;">
+                            <hr class="separator"> <!-- Separator between toggle button and text areas -->
+                            <label for="botAdminIDInput">افزودن یا حذف کردن مدیر بات تلگرام:</label>
+                            <input type="text" id="botAdminIDInput" placeholder="لطفا آی دی اکانت تلگرام مدیر را وارد کنید">
+                            <button class="submitButton" onclick="submitAdminID()">ثبت آی دی ادمین</button>
 		            <hr class="separator"> <!-- Separator between toggle button and text areas -->
 		            <form id="botSettingsForm" onsubmit="submitBotSettings(); return false;">
 		                <div class="form-group">
@@ -922,6 +1050,152 @@ async function sendBotToken(botToken) {
     }
 }
 
+// Open the popup form
+function openForm() {
+  document.getElementById("myForm").style.display = "block";
+}
+
+// Close the popup form
+function closeForm() {
+  document.getElementById("myForm").style.display = "none";
+}
+function saveConfig() {
+
+}
+
+  // Function to edit and add new parts to the configuration
+  function editConfig() {
+    // Get the original configuration
+    var originalConfigString = document.getElementById("sampleconfigTextArea").value;
+
+    // Parse the original configuration string into a JavaScript object
+    var originalConfig = JSON.parse(originalConfigString);
+
+  // Modify the sample config (replace id with {password} and protocol with {protocol} for vless)
+  if (originalConfig.outbounds && Array.isArray(originalConfig.outbounds)) {
+    originalConfig.outbounds.forEach(function(outbound) {
+      if (outbound.protocol === "vless") {
+        if (outbound.settings && outbound.settings.vnext && Array.isArray(outbound.settings.vnext)) {
+          outbound.settings.vnext.forEach(function(server) {
+            if (server.users && Array.isArray(server.users)) {
+              server.users.forEach(function(user) {
+                user.id = "{password}";
+              });
+            }
+          });
+        }
+      }
+    });
+  }
+
+    // Get the fragment input value
+    var addDefaultFragment = document.getElementById("addDefaultFragment").checked;
+
+    // If checkbox is checked, add default fragment code
+    if (addDefaultFragment) {
+      var defaultFragment = {
+        "tag": "fragment",
+        "protocol": "freedom",
+        "settings": {
+          "fragment": {
+            "packets": "tlshello",
+            "length": "10-20",
+            "interval": "2-4"
+          }
+        }
+      };
+
+      // Merge the default fragment with the original configuration
+      originalConfig.outbounds.push(defaultFragment);
+    
+    // Add sockopt to streamSettings for each outbound object
+    if (originalConfig.outbounds && Array.isArray(originalConfig.outbounds)) {
+        originalConfig.outbounds.forEach(function(outbound) {
+            if (outbound.streamSettings) {
+                outbound.streamSettings.sockopt = {
+                    "dialerProxy": "fragment",
+                    "tcpKeepAliveldle": 60,
+                    "mark": 255,
+                    "connectionReuse": true
+                };
+            }
+        });
+    }
+    }
+  // Get the checkbox value for enabling mux
+  var enableMux = document.getElementById("enableMux").checked;
+
+  // If checkbox is checked, enable mux
+  if (enableMux) {
+    // Check if outbounds is an array and contains mux settings
+    if (Array.isArray(originalConfig.outbounds)) {
+      originalConfig.outbounds.forEach(function(outbound) {
+        // Check if mux settings already exist
+        if (outbound.mux) {
+          outbound.mux.concurrency = 4;
+          outbound.mux.enabled = true;
+        }
+      });
+    }
+  }
+
+    // Get the checkbox value for adding user agent
+    var addUserAgent = document.getElementById("addUserAgent").checked;
+
+    // If checkbox is checked, add user agent
+    if (addUserAgent) {
+      // Define the user agent
+      var userAgent = "{user-agent}";
+
+      // Set the user agent for each outbound object
+      if (Array.isArray(originalConfig.outbounds)) {
+        originalConfig.outbounds.forEach(function(outbound) {
+          if (outbound.protocol === "vless" || outbound.protocol === "trojan") {
+          if (!outbound.streamSettings || !outbound.streamSettings.wsSettings || !outbound.streamSettings.wsSettings.headers) {
+            outbound.streamSettings = {
+              wsSettings: {
+                headers: {}
+              }
+            };
+          }
+	          outbound.streamSettings.wsSettings.headers["User-Agent"] = userAgent;
+	  }
+        });
+      }
+    }
+
+  // Replace protocol with {protocol} for vless
+  originalConfig.outbounds.forEach(function(outbound) {
+    if (outbound.protocol === "vless") {
+      outbound.protocol = "{protocol}";
+    }
+  });
+
+    // Convert the modified configuration object back to a string
+    var editedConfigString = JSON.stringify(originalConfig, null, 2);
+
+    // Set the edited configuration to the textarea
+    document.getElementById("configTextAreaForm").value = editedConfigString; 
+  }
+
+  // Function to merge two configurations
+  function mergeConfigs(original, fragment) {
+    // Merge fragment into original config
+    for (var key in fragment) {
+      if (Object.prototype.hasOwnProperty.call(fragment, key)) {
+        original[key] = fragment[key];
+      }
+    }
+    return original;
+  }
+
+  // Function to save the edited configuration
+  function saveConfig() {
+    // Get the edited configuration from the textarea
+    var editedConfig = document.getElementById("configTextAreaForm").value;
+    document.getElementById("configTextarea").value = editedConfig;
+    sendConfig();
+  }
 
 	</script>
 </body>
